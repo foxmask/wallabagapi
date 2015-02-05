@@ -22,6 +22,5 @@ TODO :
 ======
 
 Wait the final release of http://v2.wallabag.org to be able to use the REST API completly
-this final release should be able to provide an oauth with the exchange of the token
+this final release should be able to provide a token
 
-    
