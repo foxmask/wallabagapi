@@ -21,6 +21,6 @@ to get the project, from your virtualenv, do :
 TODO :
 ======
 
-Wait the final release of http://v2.wallabag.org to be able to use the REST API completly
+Wait the final release of http://v2.wallabag.org to be able to use the REST API (http://v2.wallabag.org/api/doc/) completly
 this final release should be able to provide a token
 
