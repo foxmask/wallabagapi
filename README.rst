@@ -6,7 +6,6 @@ Python API for Wallabagap
 
 Requirements :
 ==============
-* Flask == 0.10.1
 * requests == 2.5.0
 
 
@@ -17,6 +16,24 @@ to get the project, from your virtualenv, do :
 .. code:: python
 
     git clone https://github.com/foxmask/wallabag-api/
+
+
+Testing :
+=========
+If you plan to run python wallabag_test.py, then first of all you will need to do 
+
+.. code:: python
+    
+    pip install Flask
+
+then 
+
+.. code:: python
+
+    python wallabag_mock.py 
+
+to start a Flask environment which will respond to all the request of the test you will start with python wallabag_test.py
+
 
 TODO :
 ======
