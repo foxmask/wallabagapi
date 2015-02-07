@@ -235,7 +235,7 @@ class Wallabag(object):
         url = '/api/entries/{entry}/tags.{ext}'.format(entry=entry, ext=self.format)
         return self.query(url, params, method="get")
 
-    def post_entry_tags(self, token, entry):
+    def post_entry_tags(self, token, entry, tags):
         """
 
             POST /api/entries/{entry}/tags.{_format}
@@ -244,9 +244,11 @@ class Wallabag(object):
 
             :param token: the token that identified the user to access the API
             :param entry: \w+ an integer The Entry ID
-            :return data related to the ext
+            :return result
         """
-        params = {'token': token}
+        params = {'token': token, 'tags': []}
+        if isinstance(tags, list):
+            params['tags'] = tags
         url = '/api/entries/{entry}/tags.{ext}'.format(entry=entry, ext=self.format)
         return self.query(url, params, method="post")
 
@@ -262,8 +264,8 @@ class Wallabag(object):
             :param tag: string The Tag
             :return data related to the ext
         """
-        url = '/api/entries/{entry}/tags/{tag}.{ext}'.format(entry=entry, ext=self.format)
         params = {'token': token}
+        url = '/api/entries/{entry}/tags/{tag}.{ext}'.format(entry=entry, tag=tag, ext=self.format)
         return self.query(url, params, method="delete")
 
     def get_tags(self, token):
