@@ -2,7 +2,7 @@
 Wallabag API
 ============
 
-Python API for Wallabagap
+Python API for Wallabag
 
 Requirements :
 ==============
