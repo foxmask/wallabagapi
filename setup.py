@@ -17,8 +17,8 @@ setup(
     name='wallabag_api',
     version=version,
     description='Wallabag API',
-    author='Olivier Demah',
-    author_email='olivier@foxmask.info',
+    author='FoxMaSk',
+    author_email='foxmask@trigger-happy.eu',
     url='https://github.com/foxmask/wallabag_api',
     download_url="https://github.com/foxmask/wallabag_api/archive/wallabag_api-"
     + version + ".zip",
