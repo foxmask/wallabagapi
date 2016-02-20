@@ -12,8 +12,8 @@ __all__ = ['Wallabag']
 
 class Wallabag(object):
     """
-        Python Class 'Wallabag' to deal with Wallabagap REST API
-        This class is able to handle any data from your Wallabagap account
+        Python Class 'Wallabag' to deal with Wallabag REST API
+        This class is able to handle any data from your Wallabag account
     """
 
     host = ''
@@ -28,8 +28,8 @@ class Wallabag(object):
                  user_agent="WallabagPython/1.0 +https://github.com/foxmask/wallabag-api"):
         """
             init variable
-            :param host: string url to the official API Wallabagap
-            :param api_key: string of the key provided by Wallabagap
+            :param host: string url to the official API Wallabag
+            :param api_key: string of the key provided by Wallabag
             :param extension: json/xml/html
             :param user_agent
         """
@@ -45,26 +45,26 @@ class Wallabag(object):
         """
         return self.host
 
-    def query(self, url, params={}, method='get'):
+    def query(self, path, method='get', **params):
         """
             Do a query to the System API
-            :param url: url to the API
+            :param path: url to the API
+            :param method: the kind of query to do
             :param params: a dict with all the necessary things to query the API
             :return json data
         """
         # params = params
         params['key'] = self.api_key
-        if method == 'get':
-            r = requests.get(self.get_host() + url, params=params)
-        elif method == 'post':
-            r = requests.post(self.get_host() + url, params=params)
-        elif method == 'patch':
-            r = requests.patch(self.get_host() + url, params=params)
-        elif method == 'delete':
-            r = requests.delete(self.get_host() + url, params=params)
-        #todo : handle case of self.ext is xml or html
-        return self.handle_json_response(r)
+        r = requests.get(self.get_host() + path, params=params)
 
+        if method == 'post':
+            r = requests.post(self.get_host() + path, params=params)
+        elif method == 'patch':
+            r = requests.patch(self.get_host() + path, params=params)
+        elif method == 'delete':
+            r = requests.delete(self.get_host() + path, params=params)
+        # todo : handle case of self.ext is xml or html
+        return self.handle_json_response(r)
 
     def handle_json_response(self, responses):
         """
@@ -79,8 +79,8 @@ class Wallabag(object):
             json_data = responses.json()
         except:
             for error in json_data['errors']:
-                logging.error("Wallabag: %s" %
-                              json_data['errors'][error]['content'])
+                error_json = json_data['errors'][error]['content']
+                logging.error("Wallabag: {error}".format(error=error_json))
         return json_data
 
     def get_entries(self, token, **kwargs):
@@ -128,11 +128,11 @@ class Wallabag(object):
         if 'tags' in kwargs and isinstance(kwargs['tags'], list):
             params['tags'] = kwargs['tags']
 
-        url = '/api/entries.{ext}'.format(ext=self.format)
+        path = '/api/entries.{ext}'.format(ext=self.format)
 
-        return self.query(url, params, method="get")
+        return self.query(path, "get", **params)
 
-    def post_entries(self, token, url, title='', tags=[]):
+    def post_entries(self, token, url, title='', tags=''):
         """
 
             POST /api/entries.{_format}
@@ -148,8 +148,8 @@ class Wallabag(object):
         params = {'token': token, 'url': url, 'title': title, 'tags': []}
         if len(tags) > 0 and isinstance(tags, list):
             params['tags'] = tags
-        url = '/api/entries.{ext}'.format(ext=self.format)
-        return self.query(url, params, method="post")
+        path = '/api/entries.{ext}'.format(ext=self.format)
+        return self.query(path, "post", **params)
 
     def get_entry(self, token, entry):
         """
@@ -164,7 +164,7 @@ class Wallabag(object):
         """
         params = {'token': token}
         url = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
-        return self.query(url, params, method="get")
+        return self.query(url, "get", **params)
 
     def patch_entries(self, token, entry, **kwargs):
         """
@@ -201,9 +201,8 @@ class Wallabag(object):
         if 'delete' in kwargs and int(kwargs['delete']) in (0, 1):
             params['delete'] = int(kwargs['delete'])
 
-        url = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
-        return self.query(url, params, method="patch")
-
+        path = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
+        return self.query(path, "patch", **params)
 
     def delete_entries(self, token, entry):
         """
@@ -217,8 +216,8 @@ class Wallabag(object):
             :return result
         """
         params = {'token': token}
-        url = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
-        return self.query(url, params, method="delete")
+        path = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
+        return self.query(path, "delete", **params)
 
     def get_entry_tags(self, token, entry):
         """
@@ -233,7 +232,7 @@ class Wallabag(object):
         """
         params = {'token': token}
         url = '/api/entries/{entry}/tags.{ext}'.format(entry=entry, ext=self.format)
-        return self.query(url, params, method="get")
+        return self.query(url, "get", **params)
 
     def post_entry_tags(self, token, entry, tags):
         """
@@ -244,13 +243,14 @@ class Wallabag(object):
 
             :param token: the token that identified the user to access the API
             :param entry: \w+ an integer The Entry ID
+            :param tags: string
             :return result
         """
         params = {'token': token, 'tags': []}
         if isinstance(tags, list):
             params['tags'] = tags
-        url = '/api/entries/{entry}/tags.{ext}'.format(entry=entry, ext=self.format)
-        return self.query(url, params, method="post")
+        path = '/api/entries/{entry}/tags.{ext}'.format(entry=entry, ext=self.format)
+        return self.query(path, "post", **params)
 
     def delete_entry_tag(self, token, entry, tag):
         """
@@ -266,7 +266,7 @@ class Wallabag(object):
         """
         params = {'token': token}
         url = '/api/entries/{entry}/tags/{tag}.{ext}'.format(entry=entry, tag=tag, ext=self.format)
-        return self.query(url, params, method="delete")
+        return self.query(url, "delete", **params)
 
     def get_tags(self, token):
         """
@@ -279,8 +279,8 @@ class Wallabag(object):
             :return data related to the ext
         """
         params = {'token': token}
-        url = '/api/tags.{ext}'.format(ext=self.format)
-        return self.query(url, params, method="get")
+        path = '/api/tags.{ext}'.format(ext=self.format)
+        return self.query(path, "get", **params)
 
     def get_tag(self, token, tag):
         """
@@ -293,10 +293,9 @@ class Wallabag(object):
             :param tag: string The Tag
             :return data related to the ext
         """
-        url = '/api/tags/{tag}.{ext}'.format(tag=tag, ext=self.format)
+        path = '/api/tags/{tag}.{ext}'.format(tag=tag, ext=self.format)
         params = {'token': token}
-        return self.query(url, params, method="get")
-
+        return self.query(path, "get", **params)
 
     def delete_tag(self, token, tag):
         """
@@ -309,6 +308,6 @@ class Wallabag(object):
             :param tag: string The Tag
             :return data related to the ext
         """
-        url = '/api/tags/{tag}.{ext}'.format(tag=tag, ext=self.format)
+        path = '/api/tags/{tag}.{ext}'.format(tag=tag, ext=self.format)
         params = {'token': token}
-        return self.query(url, params, method="delete")
+        return self.query(path, "delete", **params)
