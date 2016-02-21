@@ -20,6 +20,8 @@ to get the project, from your virtualenv, do :
 
 Testing :
 =========
+
+
 If you plan to run python wallabag_test.py, then first of all you will need to do 
 
 .. code:: python
@@ -34,6 +36,7 @@ then
 
 to start a Flask environment which will respond to all the request of the test you will start with python wallabag_test.py
 
+/!\ Flask does not work with python 3.4.3
 
 TODO :
 ======
