@@ -22,6 +22,8 @@ class Wallabag(object):
     client_secret = ''
     user_agent = ''
     format = ''
+    username = ''
+    password = ''
 
     def __init__(self,
                  host='',

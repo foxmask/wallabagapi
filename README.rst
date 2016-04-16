@@ -2,7 +2,7 @@
 Wallabag API
 ============
 
-Python API for Wallabag
+Python API for Wallabag v2
 
 Requirements :
 ==============
@@ -20,24 +20,9 @@ to get the project, from your virtualenv, do :
 
 Testing :
 =========
-If you plan to run python wallabag_test.py, then first of all you will need to do 
 
-.. code:: python
-    
-    pip install Flask
+Install Wallabag V2 on your own host like explain here http://doc.wallabag.org/en/v2/user/installation.html
 
-then 
+Then create a client API like explain here http://doc.wallabag.org/en/v2/developer/api.html
 
-.. code:: python
-
-    python wallabag_mock.py 
-
-to start a Flask environment which will respond to all the request of the test you will start with python wallabag_test.py
-
-
-TODO :
-======
-
-Wait the final release of http://v2.wallabag.org to be able to use the REST API (http://v2.wallabag.org/api/doc/) completly
-this final release should be able to provide a token
 
