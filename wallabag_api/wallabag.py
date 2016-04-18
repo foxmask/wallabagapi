@@ -76,9 +76,6 @@ class Wallabag(object):
                 r = requests.delete(self.get_host() + path, headers=params)
             elif method == 'put':
                 r = requests.put(self.get_host() + path, params=params)
-            elif method == 'get_token':
-                r = requests.post(self.get_host() + path, data=params)
-            # todo : handle case of self.ext is xml or html
             return self.handle_json_response(r)
         else:
             raise ValueError('method expected : get, post, patch, delete or put')
@@ -315,8 +312,10 @@ class Wallabag(object):
         params = {'access_token': self.token}
         return self.query(path, "delete", **params)
 
-    def get_token(self, params):
+    @classmethod
+    def get_token(cls, host, **params):
         """
+        :param host: host of the service
         :param params: will contain :
 
         params = {"grant_type": "password",
@@ -327,6 +326,7 @@ class Wallabag(object):
 
         :return: access token
         """
+        params['grant_type'] = ["password"]
         path = "/oauth/v2/token"
-        return self.query(path, "get_token", **params)['access_token']
-
+        r = requests.post(host + path, data=params)
+        return cls.handle_json_response(r)['access_token']
