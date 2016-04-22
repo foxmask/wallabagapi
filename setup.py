@@ -23,6 +23,8 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Topic :: Internet',
+        'Topic :: Communications',
     ],
     install_requires=install_requires,
     include_package_data=True,
