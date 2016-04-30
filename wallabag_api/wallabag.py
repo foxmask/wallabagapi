@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 import requests
+from requests import HTTPError
 import logging
 
 __author__ = 'foxmask'
@@ -88,7 +89,7 @@ class Wallabag(object):
             :return the json data without 'root' node
         """
         if responses.status_code != 200:
-            raise Exception("Wrong status code: ", responses.status_code)
+            raise HTTPError(responses.status_code, responses.json())
         json_data = {}
         try:
             json_data = responses.json()
