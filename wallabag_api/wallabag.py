@@ -66,20 +66,21 @@ class Wallabag(object):
             necessary things to query the API
             :return json data
         """
-        if method in ('get', 'post', 'patch', 'delete', 'put', 'get_token'):
+        if method in ('get', 'post', 'patch', 'delete', 'put'):
+            full_path = self.get_host() + path
             if method == 'get':
-                r = requests.get(self.get_host() + path, params=params)
+                r = requests.get(full_path, params=params)
             elif method == 'post':
-                r = requests.post(self.get_host() + path, data=params)
+                r = requests.post(full_path, data=params)
             elif method == 'patch':
-                r = requests.patch(self.get_host() + path, data=params)
+                r = requests.patch(full_path, data=params)
             elif method == 'delete':
-                r = requests.delete(self.get_host() + path, headers=params)
+                r = requests.delete(full_path, headers=params)
             elif method == 'put':
-                r = requests.put(self.get_host() + path, params=params)
+                r = requests.put(full_path, params=params)
             return self.handle_json_response(r)
         else:
-            raise ValueError('method expected : get, post, patch, delete or put')
+            raise ValueError('method expected: get, post, patch, delete, put')
 
     @staticmethod
     def handle_json_response(responses):
@@ -98,6 +99,11 @@ class Wallabag(object):
                 error_json = json_data['errors'][error]['content']
                 logging.error("Wallabag: {error}".format(error=error_json))
         return json_data
+
+    def __get_attr(self, what, type_attr, value_attr, **kwargs):
+        value = int(kwargs[what]) if type_attr == 'int' else kwargs[what]
+        if what in kwargs and value in value_attr:
+            return value
 
     def get_entries(self, **kwargs):
         """
@@ -119,24 +125,33 @@ class Wallabag(object):
             :return data related to the ext
         """
         # default values
-        params = {'access_token': self.token,
-                  'archive': 0,
-                  'star': 0,
-                  'delete': 0,
-                  'sort': 'created',
-                  'order': 'desc',
-                  'page': 1,
-                  'perPage': 30,
-                  'tags': []}
+        params = dict({'access_token': self.token,
+                       'archive': 0,
+                       'star': 0,
+                       'delete': 0,
+                       'sort': 'created',
+                       'order': 'desc',
+                       'page': 1,
+                       'perPage': 30,
+                       'tags': []})
 
-        if 'archive' in kwargs and int(kwargs['archive']) in (0, 1):
-            params['archive'] = int(kwargs['archive'])
-        if 'star' in kwargs and int(kwargs['star']) in (0, 1):
-            params['star'] = int(kwargs['star'])
-        if 'delete' in kwargs and int(kwargs['delete']) in (0, 1):
-            params['delete'] = int(kwargs['delete'])
-        if 'order' in kwargs and kwargs['order'] in ('asc', 'desc'):
-            params['order'] = kwargs['order']
+        params['archive'] = self.__get_attr(what='archive',
+                                            type_attr=int,
+                                            value_attr=(0, 1),
+                                            **kwargs)
+        params['star'] = self.__get_attr(what='star',
+                                         type_attr=int,
+                                         value_attr=(0, 1),
+                                         **kwargs)
+        params['delete'] = self.__get_attr(what='delete',
+                                           type_attr=int,
+                                           value_attr=(0, 1),
+                                           **kwargs)
+        params['order'] = self.__get_attr(what='order',
+                                          type_attr=str,
+                                          value_attr=('asc', 'desc'),
+                                          **kwargs)
+
         if 'page' in kwargs and isinstance(kwargs['page'], int):
             params['page'] = kwargs['page']
         if 'perPage' in kwargs and isinstance(kwargs['perPage'], int):
@@ -180,7 +195,8 @@ class Wallabag(object):
             :return data related to the ext
         """
         params = {'access_token': self.token}
-        url = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
+        url = '/api/entries/{entry}.{ext}'.format(entry=entry,
+                                                  ext=self.format)
         return self.query(url, "get", **params)
 
     def patch_entries(self, entry, **kwargs):
@@ -207,16 +223,29 @@ class Wallabag(object):
                   'tags': [],
                   'star': 0,
                   'delete': 0}
+
         if 'title' in kwargs:
             params['title'] = kwargs['title']
         if 'tags' in kwargs and isinstance(kwargs['tags'], list):
             params['tags'] = ', '.join(kwargs['tags'])
-        if 'archive' in kwargs and int(kwargs['archive']) in (0, 1):
-            params['archive'] = int(kwargs['archive'])
-        if 'star' in kwargs and int(kwargs['star']) in (0, 1):
-            params['star'] = int(kwargs['star'])
-        if 'delete' in kwargs and int(kwargs['delete']) in (0, 1):
-            params['delete'] = int(kwargs['delete'])
+
+        params['archive'] = self.__get_attr(what='archive',
+                                            type_attr=int,
+                                            value_attr=(0, 1),
+                                            **kwargs)
+        params['star'] = self.__get_attr(what='star',
+                                         type_attr=int,
+                                         value_attr=(0, 1),
+                                         **kwargs)
+        params['delete'] = self.__get_attr(what='delete',
+                                           type_attr=int,
+                                           value_attr=(0, 1),
+                                           **kwargs)
+        params['order'] = self.__get_attr(what='order',
+                                          type_attr=str,
+                                          value_attr=('asc', 'desc'),
+                                          **kwargs)
+
         path = '/api/entries/{entry}.{ext}'.format(
             entry=entry, ext=self.format)
         return self.query(path, "patch", **params)

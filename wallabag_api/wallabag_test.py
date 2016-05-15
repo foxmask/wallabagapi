@@ -75,6 +75,7 @@ class TestWallabag(unittest.TestCase):
         params = {'title': 'I change the title',
                   'archive': 0,
                   'tags': ["bimbo", "pipo"],
+                  'order': 'asc',
                   'star': 0,
                   'delete': 0}
         self.assertTrue(isinstance(entry, int), True)
