@@ -294,7 +294,7 @@ class Wallabag(object):
         """
         params = {'access_token': self.token, 'tags': []}
         if isinstance(tags, list):
-            params['tags'] = tags
+            params['tags'] = ', '.join(tags)
         path = '/api/entries/{entry}/tags.{ext}'.format(
             entry=entry, ext=self.format)
         return self.query(path, "post", **params)
