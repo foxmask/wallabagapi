@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from wallabag_api import __version__ as version
 
 install_requires = [
-    'requests==2.5.0',
+    'requests-2.13.0',
 ]
 
 setup(
@@ -16,13 +16,13 @@ setup(
                  "wallabag_api-" + version + ".zip",
     packages=find_packages(),
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Internet',
         'Topic :: Communications',
     ],

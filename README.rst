@@ -1,3 +1,18 @@
+.. image:: http://img.shields.io/badge/python-3.6-orange.svg
+    :target: https://pypi.python.org/pypi/django-th/
+    :alt: Python version supported
+
+
+.. image:: http://img.shields.io/badge/python-3.5-orange.svg
+    :target: https://pypi.python.org/pypi/django-th/
+    :alt: Python version supported
+
+
+.. image:: http://img.shields.io/badge/license-BSD-blue.svg
+    :target: https://pypi.python.org/pypi/django-th/
+    :alt: License
+
+
 ============
 Wallabag API
 ============
@@ -7,7 +22,7 @@ Python API for Wallabag v2
 Requirements :
 ==============
 
-* requests  2.5.0
+* requests  2.13.0
 
 
 Installation:
@@ -37,7 +52,7 @@ Creating a post :
 .. code:: python
 
     from wallabag_api.wallabag import Wallabag
-    # settings
+    # settings
     params = {'username': 'foxmask',
               'password': 'mypass',
               'client_id': 'myid',
@@ -67,6 +82,8 @@ Testing :
 
 Install Wallabag V2 on your own host like explain here http://doc.wallabag.org/en/v2/user/installation.html
 
+Then run the development version (with make run)
+
 Then create a client API like explain here http://doc.wallabag.org/en/v2/developer/api.html
 
 this will give you somthing like this
@@ -78,5 +95,4 @@ Then replace the client_id / client_secret / login / pass to wallabag_test.py an
 .. code:: python
 
     python wallabag_test.py
-
 

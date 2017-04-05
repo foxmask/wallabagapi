@@ -5,7 +5,7 @@ from wallabag import Wallabag
 
 class TestWallabag(unittest.TestCase):
 
-    host = 'http://localhost:8080'
+    host = 'http://localhost:8000'
     client_id = ''
     client_secret = ''
     token = ''
@@ -20,12 +20,14 @@ class TestWallabag(unittest.TestCase):
 
     def test_get_token(self):
         params = {"grant_type": "password",
-                  "client_id": '1_37e16ub8a62oc4gwcg0o0wssks800kw0ok408kkwo4kosgc88g',
-                  "client_secret": '49etxpn66da8okg4cs40sswsog0sskwg4woc400c4w4w8s4wo4',
-                  "username": 'foxmask',
-                  "password": 'ratatab00m'}
-
-        data = Wallabag.get_token(host='http://localhost:8080', **params)
+                  "client_id":
+                  '1_4wqe1riwt0qoks844kwc4go08koogkgk88go4cckkwg0408kcg',
+                  "client_secret": '4mzw3qwi1xyc0cks4k80s4c8kco40wwkkkw0g40kwk4o4c44co',
+                  "username": 'wallabag',
+                  "password": 'wallabag'}
+        print(self.host)
+        data = Wallabag.get_token(host=self.host, **params)
+        print(data)
         self.assertTrue(isinstance(data, str), True)
         return data
 
