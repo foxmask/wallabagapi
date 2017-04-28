@@ -121,6 +121,7 @@ class Wallabag(object):
                 page: int default 1 what page you want
                 perPage: int default 30 result per page
                 tags: list of tags url encoded.
+                since: int default 0 from what timestamp you want
                 Will returns entries that matches ALL tags
             :return data related to the ext
         """
@@ -158,6 +159,8 @@ class Wallabag(object):
             params['perPage'] = kwargs['perPage']
         if 'tags' in kwargs and isinstance(kwargs['tags'], list):
             params['tags'] = kwargs['tags']
+        if 'since' in kwargs and isinstance(kwargs['since'], int):
+            params['since'] = kwargs['since']
 
         path = '/api/entries.{ext}'.format(ext=self.format)
 
