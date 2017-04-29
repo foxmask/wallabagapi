@@ -134,7 +134,8 @@ class Wallabag(object):
                        'order': 'desc',
                        'page': 1,
                        'perPage': 30,
-                       'tags': []})
+                       'tags': [],
+                       'since': 0})
 
         params['archive'] = self.__get_attr(what='archive',
                                             type_attr=int,
