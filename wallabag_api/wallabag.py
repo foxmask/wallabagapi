@@ -183,8 +183,8 @@ class Wallabag(object):
         """
         params = {'access_token': self.token, 'url': url, 'title': title,
                   'tags': tags, 'starred': starred, 'archive': archive}
-        if len(tags) > 0 and isinstance(tags, list):
-            params['tags'] = ', '.join(tags)
+        if len(tags) > 0 and ',' in tags:
+            params['tags'] = tags.split(',')
         path = '/api/entries.{ext}'.format(ext=self.format)
         return self.query(path, "post", **params)
 
@@ -297,8 +297,8 @@ class Wallabag(object):
             :return result
         """
         params = {'access_token': self.token, 'tags': []}
-        if isinstance(tags, list):
-            params['tags'] = ', '.join(tags)
+        if len(tags) > 0 and ',' in tags:
+            params['tags'] = tags.split(',')
         path = '/api/entries/{entry}/tags.{ext}'.format(
             entry=entry, ext=self.format)
         return self.query(path, "post", **params)
