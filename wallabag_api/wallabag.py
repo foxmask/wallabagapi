@@ -95,9 +95,13 @@ class Wallabag(object):
         try:
             json_data = responses.json()
         except:
-            for error in json_data['errors']:
-                error_json = json_data['errors'][error]['content']
-                logging.error("Wallabag: {error}".format(error=error_json))
+            # sometimes json_data does not return any json() without 
+            # any error. This is due to the grabbing URL which "rejects"
+            # the URL
+            if 'errors' in json_data:
+                for error in json_data['errors']:
+                    error_json = json_data['errors'][error]['content']
+                    logging.error("Wallabag: {error}".format(error=error_json))
         return json_data
 
     def __get_attr(self, what, type_attr, value_attr, **kwargs):
