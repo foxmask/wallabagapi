@@ -17,7 +17,7 @@
 Wallabag API
 ============
 
-Python API for Wallabag v2
+Python API for Wallabag v2.2.3
 
 Requirements :
 ==============
@@ -62,7 +62,10 @@ Creating a post :
     token = Wallabag.get_token(host=my_host, **params)
 
     # create a post
-    wall = Wallabag(host=my_host, client_secret='mysecret', client_id='myid', token=token)
+    wall = Wallabag(host=my_host,
+                    client_secret='mysecret',
+                    client_id='myid',
+                    token=token)
 
     my_url = 'https://blog.trigger-happy.eu'
     my_title = 'Trigger Happy blog'
@@ -75,6 +78,41 @@ this will give you something like this :
 
 .. image:: https://github.com/foxmask/wallabag_api/blob/master/wallabag.png
 
+
+3) get all the entries
+
+.. code:: python
+
+    # get all the entries
+    wall = wall.get_entries()
+
+    all_article = wall['_embedded']['items']
+
+    for article in all_article:
+        print(article['title'])
+        print(article['content'])
+        print("******")
+
+4) version of wallabag
+
+.. code:: python
+
+    # get the version of your wallabag instance
+    print("version {}".format(wall.version))
+
+5) to get the article in PDF
+
+.. code:: python
+
+    # to get the article in PDF for example,
+    wall = Wallabag(host=my_host,
+                    client_secret='mysecret',
+                    client_id='myid',
+                    token=token,
+                    extension='pdf')
+    article = wall.get_entry(entry=1)
+    with open("my_file.pdf", "wb") as f:
+        f.write(article)
 
 
 Testing :

@@ -1,7 +1,8 @@
 # coding: utf-8
+import logging
 import requests
 from requests import HTTPError
-import logging
+
 
 __author__ = 'foxmask'
 
@@ -16,7 +17,7 @@ class Wallabag(object):
         Python Class 'Wallabag' to deal with Wallabag REST API
         This class is able to handle any data from your Wallabag account
     """
-
+    EXTENTIONS = ('xml', 'json', 'txt', 'csv', 'pdf', 'epub', 'mobi', 'html')
     host = ''
     token = ''
     client_id = ''
@@ -32,7 +33,7 @@ class Wallabag(object):
                  client_id='',
                  client_secret='',
                  extension='json',
-                 user_agent="WallabagPython/1.0 "
+                 user_agent="WallabagPython/1.3 "
                             "+https://github.com/foxmask/wallabag-api"):
         """
             init variable
@@ -40,7 +41,7 @@ class Wallabag(object):
             :param token: string of the key provided by Wallabag
             :param client_id client id
             :param client_secret client secret
-            :param extension: json/xml/html
+            :param extension: xml|json|txt|csv|pdf|epub|mobi|html
             :param user_agent
         """
         self.host = host
@@ -49,6 +50,8 @@ class Wallabag(object):
         self.token = token
         self.format = extension
         self.user_agent = user_agent
+        if self.format not in self.EXTENTIONS:
+            raise ValueError("format invalid {0} should be one of {1}".format(self.format, self.EXTENTIONS))
 
     def get_host(self):
         """
@@ -67,7 +70,7 @@ class Wallabag(object):
             :return json data
         """
         if method in ('get', 'post', 'patch', 'delete', 'put'):
-            full_path = self.get_host() + path
+            full_path = self.host + path
             if method == 'get':
                 r = requests.get(full_path, params=params)
             elif method == 'post':
@@ -78,7 +81,12 @@ class Wallabag(object):
                 r = requests.delete(full_path, headers=params)
             elif method == 'put':
                 r = requests.put(full_path, params=params)
-            return self.handle_json_response(r)
+            # return the content if its a binary one
+            if r.headers['Content-Type'].startswith('application/pdf') or\
+                    r.headers['Content-Type'].startswith('application/epub'):
+                return r.content
+            else:
+                return self.handle_json_response(r)
         else:
             raise ValueError('method expected: get, post, patch, delete, put')
 
@@ -100,11 +108,21 @@ class Wallabag(object):
                 logging.error("Wallabag: {error}".format(error=error_json))
         return json_data
 
-    def __get_attr(self, what, type_attr, value_attr, **kwargs):
-        value = int(kwargs[what]) if type_attr == 'int' else kwargs[what]
+    @staticmethod
+    def __get_attr(what, type_attr, value_attr, **kwargs):
+        """
+
+        :param what:
+        :param type_attr:
+        :param value_attr:
+        :param kwargs:
+        :return:
+        """
+        value = int(kwargs[what]) if type_attr == 'int' else kwargs.get(what)
         if what in kwargs and value in value_attr:
             return value
 
+    # ENTRIES
     def get_entries(self, **kwargs):
         """
 
@@ -254,6 +272,37 @@ class Wallabag(object):
             entry=entry, ext=self.format)
         return self.query(path, "patch", **params)
 
+    def get_entry_export(self, entry):
+        """
+
+            GET /api/entries/{entry}/export.{_format}
+
+            Retrieve a single entry as a predefined format.
+
+            :param entry: \w+ an integer The Entry ID
+            :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/entries/{entry}/export.{ext}'.format(entry=entry,
+                                                         ext=self.format)
+        return self.query(url, "get", **params)
+
+    def patch_entry_reload(self, entry):
+        """
+
+            PATCH /api/entries/{entry}/reload.{_format}
+
+            Reload an entry. An empty response with HTTP Status 304 will be send if we weren't able to update
+            the content (because it hasn't changed or we got an error).
+
+            :param entry: \w+ an integer The Entry ID
+            :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/entries/{entry}/reload.{ext}'.format(entry=entry,
+                                                         ext=self.format)
+        return self.query(url, "patch", **params)
+
     def delete_entries(self, entry):
         """
 
@@ -269,6 +318,27 @@ class Wallabag(object):
         path = '/api/entries/{entry}.{ext}'.format(
             entry=entry, ext=self.format)
         return self.query(path, "delete", **params)
+
+    def entries_exists(self, url, urls=''):
+        """
+
+            GET /api/entries/exists.{_format}
+
+            Check if an entry exist by url.
+
+            :param url 	string 	true 	An url 	Url to check if it exists
+            :param urls string 	false 	An array of urls (?urls[]=http...&urls[]=http...)
+            Urls (as an array) to check if it exists
+
+            :return result
+        """
+        params = {'url': url,
+                  'urls': urls}
+
+        path = '/api/entries/exists.{ext}'.format(ext=self.format)
+        return self.query(path, "get", **params)
+
+    # TAGS
 
     def get_entry_tags(self, entry):
         """
@@ -345,6 +415,131 @@ class Wallabag(object):
         path = '/api/tags/{tag}.{ext}'.format(tag=tag, ext=self.format)
         params = {'access_token': self.token}
         return self.query(path, "delete", **params)
+
+    def delete_tag_label(self, tag):
+        """
+
+            DELETE /api/tag/label.{_format}
+
+            Permanently remove one tag from every entry.
+
+            :param tag: string The Tag
+            :return data related to the ext
+        """
+        # @TODO check if that method is well documented as its the same as delete_tags !
+        path = '/api/tag/label.{ext}'.format(ext=self.format)
+        params = {'access_token': self.token,
+                  'tag': tag}
+        return self.query(path, "delete", **params)
+
+    def delete_tags_label(self, tags):
+        """
+
+            DELETE /api/tags/label.{_format}
+
+            Permanently remove some tags from every entry.
+
+            :param tags: string tags as strings (comma splitted)
+            :return data related to the ext
+        """
+        # @TODO check if that method is well documented as its the same as delete_tags !
+        path = '/api/tag/label.{ext}'.format(ext=self.format)
+        params = {'access_token': self.token,
+                  'tags': tags}
+        return self.query(path, "delete", **params)
+
+    # ANNOTATIONS
+    def delete_annotations(self, annotation):
+        """
+
+            DELETE /api/annotations/{annotation}.{_format}
+
+            Removes an annotation.
+
+            :param annotation 	\w+ 	string 	The annotation ID
+
+            Will returns annotation for this entry
+            :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/annotations/{annotation}.{ext}'.format(
+            annotation=annotation, ext=self.format)
+        return self.query(url, "delete", **params)
+
+    def put_annotations(self, annotation):
+        """
+
+            PUT /api/annotations/{annotation}.{_format}
+
+            Updates an annotation.
+
+            :param annotation 	\w+ 	string 	The annotation ID
+
+            Will returns annotation for this entry
+            :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/annotations/{annotation}.{ext}'.format(
+            annotation=annotation, ext=self.format)
+        return self.query(url, "put", **params)
+
+    def get_annotations(self, entry):
+        """
+
+            GET /api/annotations/{entry}.{_format}
+
+            Retrieve annotations for an entry
+
+            :param entry 	\w+ 	integer 	The entry ID
+
+            Will returns annotation for this entry
+            :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/annotations/{entry}.{ext}'.format(entry=entry,
+                                                      ext=self.format)
+        return self.query(url, "get", **params)
+
+    def post_annotations(self, entry, **kwargs):
+        """
+
+            POST /api/annotations/{entry}.{_format}
+
+            Creates a new annotation.
+
+            :param entry 	\w+ 	integer 	The entry ID
+
+            :return
+        """
+        params = dict({'access_token': self.token,
+                       'ranges': [],
+                       'quote': '',
+                       'text': ''})
+        if 'ranges' in kwargs:
+            params['ranges'] = kwargs['ranges']
+        if 'quote' in kwargs:
+            params['quote'] = kwargs['quote']
+        if 'text' in kwargs:
+            params['text'] = kwargs['text']
+
+        url = '/api/annotations/{entry}.{ext}'.format(entry=entry,
+                                                      ext=self.format)
+        return self.query(url, "post", **params)
+
+    # VERSION
+    @property
+    def version(self):
+        """
+
+            GET /api/version.{_format}
+
+            Retrieve version number
+
+            :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/version.{ext}'.format(ext=self.format)
+        return self.query(url, "get", **params)
 
     @classmethod
     def get_token(cls, host, **params):
