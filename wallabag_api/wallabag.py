@@ -103,9 +103,13 @@ class Wallabag(object):
         try:
             json_data = responses.json()
         except:
-            for error in json_data['errors']:
-                error_json = json_data['errors'][error]['content']
-                logging.error("Wallabag: {error}".format(error=error_json))
+            # sometimes json_data does not return any json() without 
+            # any error. This is due to the grabbing URL which "rejects"
+            # the URL
+            if 'errors' in json_data:
+                for error in json_data['errors']:
+                    error_json = json_data['errors'][error]['content']
+                    logging.error("Wallabag: {error}".format(error=error_json))
         return json_data
 
     @staticmethod
@@ -201,8 +205,8 @@ class Wallabag(object):
         """
         params = {'access_token': self.token, 'url': url, 'title': title,
                   'tags': tags, 'starred': starred, 'archive': archive}
-        if len(tags) > 0 and isinstance(tags, list):
-            params['tags'] = ', '.join(tags)
+        if len(tags) > 0 and ',' in tags:
+            params['tags'] = tags.split(',')
         path = '/api/entries.{ext}'.format(ext=self.format)
         return self.query(path, "post", **params)
 
@@ -367,8 +371,8 @@ class Wallabag(object):
             :return result
         """
         params = {'access_token': self.token, 'tags': []}
-        if isinstance(tags, list):
-            params['tags'] = ', '.join(tags)
+        if len(tags) > 0 and ',' in tags:
+            params['tags'] = tags.split(',')
         path = '/api/entries/{entry}/tags.{ext}'.format(
             entry=entry, ext=self.format)
         return self.query(path, "post", **params)
