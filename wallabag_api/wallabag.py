@@ -1,7 +1,8 @@
 # coding: utf-8
 import logging
-import requests
-from requests import HTTPError
+import aiohttp
+from aiohttp.http_exceptions import HttpProcessingError
+# from aiohttp import HTTPError
 
 
 __author__ = 'foxmask'
@@ -60,7 +61,7 @@ class Wallabag(object):
         """
         return self.host
 
-    def query(self, path, method='get', **params):
+    async def query(self, path, method='get', **params):
         """
             Do a query to the System API
             :param path: url to the API
@@ -71,22 +72,33 @@ class Wallabag(object):
         """
         if method in ('get', 'post', 'patch', 'delete', 'put'):
             full_path = self.host + path
-            if method == 'get':
-                r = requests.get(full_path, params=params)
-            elif method == 'post':
-                r = requests.post(full_path, data=params)
-            elif method == 'patch':
-                r = requests.patch(full_path, data=params)
-            elif method == 'delete':
-                r = requests.delete(full_path, headers=params)
-            elif method == 'put':
-                r = requests.put(full_path, params=params)
+            async with aiohttp.ClientSession() as session:
+                if method == 'get':
+                    async with session.get(full_path, params=params) as resp:
+                        print(resp.status)
+                        print(await resp.text())
+                elif method == 'post':
+                    async with session.post(full_path, data=params) as resp:
+                        print(resp.status)
+                        print(await resp.text())
+                elif method == 'patch':
+                    async with session.patch(full_path, data=params) as resp:
+                        print(resp.status)
+                        print(await resp.text())
+                elif method == 'delete':
+                    async with session.delete(full_path, headers=params) as resp:
+                        print(resp.status)
+                        print(await resp.text())
+                elif method == 'put':
+                    async with session.delete(full_path, data=params) as resp:
+                        print(resp.status)
+                        print(await resp.text())
             # return the content if its a binary one
-            if r.headers['Content-Type'].startswith('application/pdf') or\
-                    r.headers['Content-Type'].startswith('application/epub'):
-                return r.content
+            if resp.headers['Content-Type'].startswith('application/pdf') or\
+                    resp.headers['Content-Type'].startswith('application/epub'):
+                return await resp.read()
             else:
-                return self.handle_json_response(r)
+                return self.handle_json_response(resp)
         else:
             raise ValueError('method expected: get, post, patch, delete, put')
 
@@ -97,13 +109,13 @@ class Wallabag(object):
             :param responses: the json response
             :return the json data without 'root' node
         """
-        if responses.status_code != 200:
-            raise HTTPError(responses.status_code, responses.json())
+        if responses.status != 200:
+            raise HttpProcessingError(code=responses.status, message=responses.json())
         json_data = {}
         try:
             json_data = responses.json()
         except:
-            # sometimes json_data does not return any json() without 
+            # sometimes json_data does not return any json() without
             # any error. This is due to the grabbing URL which "rejects"
             # the URL
             if 'errors' in json_data:
@@ -127,7 +139,7 @@ class Wallabag(object):
             return value
 
     # ENTRIES
-    def get_entries(self, **kwargs):
+    async def get_entries(self, **kwargs):
         """
 
             GET /api/entries.{_format}
@@ -187,9 +199,9 @@ class Wallabag(object):
 
         path = '/api/entries.{ext}'.format(ext=self.format)
 
-        return self.query(path, "get", **params)
+        return await self.query(path, "get", **params)
 
-    def post_entries(self, url, title='', tags='', starred=0, archive=0):
+    async def post_entries(self, url, title='', tags='', starred=0, archive=0):
         """
 
             POST /api/entries.{_format}
@@ -208,9 +220,9 @@ class Wallabag(object):
         if len(tags) > 0 and ',' in tags:
             params['tags'] = tags.split(',')
         path = '/api/entries.{ext}'.format(ext=self.format)
-        return self.query(path, "post", **params)
+        return await self.query(path, "post", **params)
 
-    def get_entry(self, entry):
+    async def get_entry(self, entry):
         """
 
             GET /api/entries/{entry}.{_format}
@@ -223,9 +235,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/entries/{entry}.{ext}'.format(entry=entry,
                                                   ext=self.format)
-        return self.query(url, "get", **params)
+        return await self.query(url, "get", **params)
 
-    def patch_entries(self, entry, **kwargs):
+    async def patch_entries(self, entry, **kwargs):
         """
 
             PATCH /api/entries/{entry}.{_format}
@@ -274,9 +286,9 @@ class Wallabag(object):
 
         path = '/api/entries/{entry}.{ext}'.format(
             entry=entry, ext=self.format)
-        return self.query(path, "patch", **params)
+        return await self.query(path, "patch", **params)
 
-    def get_entry_export(self, entry):
+    async def get_entry_export(self, entry):
         """
 
             GET /api/entries/{entry}/export.{_format}
@@ -289,9 +301,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/entries/{entry}/export.{ext}'.format(entry=entry,
                                                          ext=self.format)
-        return self.query(url, "get", **params)
+        return await self.query(url, "get", **params)
 
-    def patch_entry_reload(self, entry):
+    async def patch_entry_reload(self, entry):
         """
 
             PATCH /api/entries/{entry}/reload.{_format}
@@ -305,9 +317,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/entries/{entry}/reload.{ext}'.format(entry=entry,
                                                          ext=self.format)
-        return self.query(url, "patch", **params)
+        return await self.query(url, "patch", **params)
 
-    def delete_entries(self, entry):
+    async def delete_entries(self, entry):
         """
 
             DELETE /api/entries/{entry}.{_format}
@@ -321,9 +333,9 @@ class Wallabag(object):
         params = {'Authorization': 'Bearer {}'.format(self.token)}
         path = '/api/entries/{entry}.{ext}'.format(
             entry=entry, ext=self.format)
-        return self.query(path, "delete", **params)
+        return await self.query(path, "delete", **params)
 
-    def entries_exists(self, url, urls=''):
+    async def entries_exists(self, url, urls=''):
         """
 
             GET /api/entries/exists.{_format}
@@ -340,11 +352,11 @@ class Wallabag(object):
                   'urls': urls}
 
         path = '/api/entries/exists.{ext}'.format(ext=self.format)
-        return self.query(path, "get", **params)
+        return await self.query(path, "get", **params)
 
     # TAGS
 
-    def get_entry_tags(self, entry):
+    async def get_entry_tags(self, entry):
         """
 
             GET /api/entries/{entry}/tags.{_format}
@@ -357,9 +369,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/entries/{entry}/tags.{ext}'.format(
             entry=entry, ext=self.format)
-        return self.query(url, "get", **params)
+        return await self.query(url, "get", **params)
 
-    def post_entry_tags(self, entry, tags):
+    async def post_entry_tags(self, entry, tags):
         """
 
             POST /api/entries/{entry}/tags.{_format}
@@ -375,9 +387,9 @@ class Wallabag(object):
             params['tags'] = tags.split(',')
         path = '/api/entries/{entry}/tags.{ext}'.format(
             entry=entry, ext=self.format)
-        return self.query(path, "post", **params)
+        return await self.query(path, "post", **params)
 
-    def delete_entry_tag(self, entry, tag):
+    async def delete_entry_tag(self, entry, tag):
         """
 
             DELETE /api/entries/{entry}/tags/{tag}.{_format}
@@ -391,9 +403,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/entries/{entry}/tags/{tag}.{ext}'.format(
             entry=entry, tag=tag, ext=self.format)
-        return self.query(url, "delete", **params)
+        return await self.query(url, "delete", **params)
 
-    def get_tags(self):
+    async def get_tags(self):
         """
 
             GET /api/tags.{_format}
@@ -404,9 +416,9 @@ class Wallabag(object):
         """
         params = {'access_token': self.token}
         path = '/api/tags.{ext}'.format(ext=self.format)
-        return self.query(path, "get", **params)
+        return await self.query(path, "get", **params)
 
-    def delete_tag(self, tag):
+    async def delete_tag(self, tag):
         """
 
             DELETE /api/tags/{tag}.{_format}
@@ -418,9 +430,9 @@ class Wallabag(object):
         """
         path = '/api/tags/{tag}.{ext}'.format(tag=tag, ext=self.format)
         params = {'access_token': self.token}
-        return self.query(path, "delete", **params)
+        return await self.query(path, "delete", **params)
 
-    def delete_tag_label(self, tag):
+    async def delete_tag_label(self, tag):
         """
 
             DELETE /api/tag/label.{_format}
@@ -434,9 +446,9 @@ class Wallabag(object):
         path = '/api/tag/label.{ext}'.format(ext=self.format)
         params = {'access_token': self.token,
                   'tag': tag}
-        return self.query(path, "delete", **params)
+        return await self.query(path, "delete", **params)
 
-    def delete_tags_label(self, tags):
+    async def delete_tags_label(self, tags):
         """
 
             DELETE /api/tags/label.{_format}
@@ -450,10 +462,10 @@ class Wallabag(object):
         path = '/api/tag/label.{ext}'.format(ext=self.format)
         params = {'access_token': self.token,
                   'tags': tags}
-        return self.query(path, "delete", **params)
+        return await self.query(path, "delete", **params)
 
     # ANNOTATIONS
-    def delete_annotations(self, annotation):
+    async def delete_annotations(self, annotation):
         """
 
             DELETE /api/annotations/{annotation}.{_format}
@@ -468,9 +480,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/annotations/{annotation}.{ext}'.format(
             annotation=annotation, ext=self.format)
-        return self.query(url, "delete", **params)
+        return await self.query(url, "delete", **params)
 
-    def put_annotations(self, annotation):
+    async def put_annotations(self, annotation):
         """
 
             PUT /api/annotations/{annotation}.{_format}
@@ -485,9 +497,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/annotations/{annotation}.{ext}'.format(
             annotation=annotation, ext=self.format)
-        return self.query(url, "put", **params)
+        return await self.query(url, "put", **params)
 
-    def get_annotations(self, entry):
+    async def get_annotations(self, entry):
         """
 
             GET /api/annotations/{entry}.{_format}
@@ -502,9 +514,9 @@ class Wallabag(object):
         params = {'access_token': self.token}
         url = '/api/annotations/{entry}.{ext}'.format(entry=entry,
                                                       ext=self.format)
-        return self.query(url, "get", **params)
+        return await self.query(url, "get", **params)
 
-    def post_annotations(self, entry, **kwargs):
+    async def post_annotations(self, entry, **kwargs):
         """
 
             POST /api/annotations/{entry}.{_format}
@@ -528,11 +540,11 @@ class Wallabag(object):
 
         url = '/api/annotations/{entry}.{ext}'.format(entry=entry,
                                                       ext=self.format)
-        return self.query(url, "post", **params)
+        return await self.query(url, "post", **params)
 
     # VERSION
     @property
-    def version(self):
+    async def version(self):
         """
 
             GET /api/version.{_format}
@@ -543,10 +555,10 @@ class Wallabag(object):
         """
         params = {'access_token': self.token}
         url = '/api/version.{ext}'.format(ext=self.format)
-        return self.query(url, "get", **params)
+        return await self.query(url, "get", **params)
 
     @classmethod
-    def get_token(cls, host, **params):
+    async def get_token(cls, session, host, **params):
         """
         :param host: host of the service
         :param params: will contain :
@@ -559,7 +571,10 @@ class Wallabag(object):
 
         :return: access token
         """
-        params['grant_type'] = ["password"]
+        params['grant_type'] = "client_credentials"
         path = "/oauth/v2/token"
-        r = requests.post(host + path, data=params)
-        return cls.handle_json_response(r)['access_token']
+        async with aiohttp.ClientSession(loop=session.loop) as session:
+            async with session.post(host + path, params=params) as resp:
+                print(await resp.text())
+                return await cls.handle_json_response(resp)['access_token']
+                # return await cls.handle_json_response(resp)
