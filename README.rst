@@ -110,7 +110,7 @@ this will give you something like this :
                     client_id='myid',
                     token=token,
                     extension='pdf')
-    article = wall.get_entry(entry=1)
+    article = wall.get_entry_export(entry=1)
     with open("my_file.pdf", "wb") as f:
         f.write(article)
 

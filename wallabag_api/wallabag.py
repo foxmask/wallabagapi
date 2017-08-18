@@ -2,6 +2,7 @@
 import logging
 import aiohttp
 from aiohttp.http_exceptions import HttpProcessingError
+from aiohttp.client_exceptions import ClientResponseError
 # from aiohttp import HTTPError
 
 
@@ -27,7 +28,7 @@ class Wallabag(object):
     format = ''
     username = ''
     password = ''
-    aio_session = None
+    aio_sess = None
 
     def __init__(self,
                  host='',
@@ -37,7 +38,7 @@ class Wallabag(object):
                  extension='json',
                  user_agent="WallabagPython/1.3 "
                             "+https://github.com/foxmask/wallabag-api",
-                 aio_session=None):
+                 aio_sess=None):
         """
             init variable
             :param host: string url to the official API Wallabag
@@ -54,7 +55,7 @@ class Wallabag(object):
         self.token = token
         self.format = extension
         self.user_agent = user_agent
-        self.aio_session = aio_session
+        self.aio_sess = aio_sess
         if self.format not in self.EXTENTIONS:
             raise ValueError("format invalid {0} should be one of {1}".format(self.format, self.EXTENTIONS))
 
@@ -78,33 +79,23 @@ class Wallabag(object):
         if method in ('get', 'post', 'patch', 'delete', 'put'):
             full_path = self.host + path
             if method == 'get':
-                print(full_path)
-                print(params)
-                async with self.aio_session.get(full_path, params=params) as resp:
-                    print(resp.status)
-                    print(await resp.text())
+                resp = await self.aio_sess.get(full_path, params=params)
             elif method == 'post':
-                async with self.aio_session.post(full_path, data=params) as resp:
-                    print(resp.status)
-                    print(await resp.text())
+                resp = await self.aio_sess.post(full_path, data=params)
             elif method == 'patch':
-                async with self.aio_session.patch(full_path, data=params) as resp:
-                    print(resp.status)
-                    print(await resp.text())
+                resp = await self.aio_sess.patch(full_path, data=params)
             elif method == 'delete':
-                async with self.aio_session.delete(full_path, headers=params) as resp:
-                    print(resp.status)
-                    print(await resp.text())
+                resp = await self.aio_sess.delete(full_path, headers=params)
             elif method == 'put':
-                async with self.aio_session.delete(full_path, data=params) as resp:
-                    print(resp.status)
-                    print(await resp.text())
-            # return the content if its a binary one
-            if resp.headers['Content-Type'].startswith('application/pdf') or\
-                    resp.headers['Content-Type'].startswith('application/epub'):
-                return await resp.read()
-            else:
-                return await self.handle_json_response(resp)
+                resp = await self.aio_sess.put(full_path, data=params)
+
+            async with resp:
+                # return the content if its a binary one
+                if resp.content_type.startswith('application/pdf') or \
+                        resp.content_type.startswith('application/epub'):
+                    return await resp.read()
+                else:
+                    return await self.handle_json_response(resp)
         else:
             raise ValueError('method expected: get, post, patch, delete, put')
 
@@ -116,18 +107,17 @@ class Wallabag(object):
             :return the json data without 'root' node
         """
         if responses.status != 200:
-            raise HttpProcessingError(code=responses.status, message=await responses.json())
+            raise HttpProcessingError(code=responses.status,
+                                      message=await responses.json())
         json_data = {}
         try:
             json_data = responses.json()
-        except:
+        except ClientResponseError as e:
             # sometimes json_data does not return any json() without
             # any error. This is due to the grabbing URL which "rejects"
             # the URL
-            if 'errors' in json_data:
-                for error in json_data['errors']:
-                    error_json = json_data['errors'][error]['content']
-                    logging.error("Wallabag: {error}".format(error=error_json))
+            logging.error("Wallabag: aiohttp error {code} {message}"
+                          .format(code=e.code, message=e.message))
         return await json_data
 
     @staticmethod
