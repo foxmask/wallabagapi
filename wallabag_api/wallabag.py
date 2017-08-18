@@ -27,6 +27,7 @@ class Wallabag(object):
     format = ''
     username = ''
     password = ''
+    aio_session = None
 
     def __init__(self,
                  host='',
@@ -35,7 +36,8 @@ class Wallabag(object):
                  client_secret='',
                  extension='json',
                  user_agent="WallabagPython/1.3 "
-                            "+https://github.com/foxmask/wallabag-api"):
+                            "+https://github.com/foxmask/wallabag-api",
+                 aio_session=None):
         """
             init variable
             :param host: string url to the official API Wallabag
@@ -44,6 +46,7 @@ class Wallabag(object):
             :param client_secret client secret
             :param extension: xml|json|txt|csv|pdf|epub|mobi|html
             :param user_agent
+            :param aio_session aiohttp session
         """
         self.host = host
         self.client_id = client_id
@@ -51,6 +54,7 @@ class Wallabag(object):
         self.token = token
         self.format = extension
         self.user_agent = user_agent
+        self.aio_session = aio_session
         if self.format not in self.EXTENTIONS:
             raise ValueError("format invalid {0} should be one of {1}".format(self.format, self.EXTENTIONS))
 
@@ -64,6 +68,7 @@ class Wallabag(object):
     async def query(self, path, method='get', **params):
         """
             Do a query to the System API
+
             :param path: url to the API
             :param method: the kind of query to do
             :param params: a dict with all the
@@ -72,45 +77,46 @@ class Wallabag(object):
         """
         if method in ('get', 'post', 'patch', 'delete', 'put'):
             full_path = self.host + path
-            async with aiohttp.ClientSession() as session:
-                if method == 'get':
-                    async with session.get(full_path, params=params) as resp:
-                        print(resp.status)
-                        print(await resp.text())
-                elif method == 'post':
-                    async with session.post(full_path, data=params) as resp:
-                        print(resp.status)
-                        print(await resp.text())
-                elif method == 'patch':
-                    async with session.patch(full_path, data=params) as resp:
-                        print(resp.status)
-                        print(await resp.text())
-                elif method == 'delete':
-                    async with session.delete(full_path, headers=params) as resp:
-                        print(resp.status)
-                        print(await resp.text())
-                elif method == 'put':
-                    async with session.delete(full_path, data=params) as resp:
-                        print(resp.status)
-                        print(await resp.text())
+            if method == 'get':
+                print(full_path)
+                print(params)
+                async with self.aio_session.get(full_path, params=params) as resp:
+                    print(resp.status)
+                    print(await resp.text())
+            elif method == 'post':
+                async with self.aio_session.post(full_path, data=params) as resp:
+                    print(resp.status)
+                    print(await resp.text())
+            elif method == 'patch':
+                async with self.aio_session.patch(full_path, data=params) as resp:
+                    print(resp.status)
+                    print(await resp.text())
+            elif method == 'delete':
+                async with self.aio_session.delete(full_path, headers=params) as resp:
+                    print(resp.status)
+                    print(await resp.text())
+            elif method == 'put':
+                async with self.aio_session.delete(full_path, data=params) as resp:
+                    print(resp.status)
+                    print(await resp.text())
             # return the content if its a binary one
             if resp.headers['Content-Type'].startswith('application/pdf') or\
                     resp.headers['Content-Type'].startswith('application/epub'):
                 return await resp.read()
             else:
-                return self.handle_json_response(resp)
+                return await self.handle_json_response(resp)
         else:
             raise ValueError('method expected: get, post, patch, delete, put')
 
     @staticmethod
-    def handle_json_response(responses):
+    async def handle_json_response(responses):
         """
             get the json data response
             :param responses: the json response
             :return the json data without 'root' node
         """
         if responses.status != 200:
-            raise HttpProcessingError(code=responses.status, message=responses.json())
+            raise HttpProcessingError(code=responses.status, message=await responses.json())
         json_data = {}
         try:
             json_data = responses.json()
@@ -122,7 +128,7 @@ class Wallabag(object):
                 for error in json_data['errors']:
                     error_json = json_data['errors'][error]['content']
                     logging.error("Wallabag: {error}".format(error=error_json))
-        return json_data
+        return await json_data
 
     @staticmethod
     def __get_attr(what, type_attr, value_attr, **kwargs):
@@ -134,7 +140,7 @@ class Wallabag(object):
         :param kwargs:
         :return:
         """
-        value = int(kwargs[what]) if type_attr == 'int' else kwargs.get(what)
+        value = int(kwargs[what]) if type_attr == 'int' else kwargs[what]
         if what in kwargs and value in value_attr:
             return value
 
@@ -168,32 +174,32 @@ class Wallabag(object):
                        'order': 'desc',
                        'page': 1,
                        'perPage': 30,
-                       'tags': [],
+                       'tags': '',
                        'since': 0})
 
         params['archive'] = self.__get_attr(what='archive',
                                             type_attr=int,
                                             value_attr=(0, 1),
-                                            **kwargs)
+                                            **params)
         params['star'] = self.__get_attr(what='star',
                                          type_attr=int,
                                          value_attr=(0, 1),
-                                         **kwargs)
+                                         **params)
         params['delete'] = self.__get_attr(what='delete',
                                            type_attr=int,
                                            value_attr=(0, 1),
-                                           **kwargs)
+                                           **params)
         params['order'] = self.__get_attr(what='order',
                                           type_attr=str,
                                           value_attr=('asc', 'desc'),
-                                          **kwargs)
+                                          **params)
 
         if 'page' in kwargs and isinstance(kwargs['page'], int):
             params['page'] = kwargs['page']
         if 'perPage' in kwargs and isinstance(kwargs['perPage'], int):
             params['perPage'] = kwargs['perPage']
         if 'tags' in kwargs and isinstance(kwargs['tags'], list):
-            params['tags'] = kwargs['tags']
+            params['tags'] = ', '.join(kwargs['tags'])
         if 'since' in kwargs and isinstance(kwargs['since'], int):
             params['since'] = kwargs['since']
 
@@ -405,7 +411,7 @@ class Wallabag(object):
             entry=entry, tag=tag, ext=self.format)
         return await self.query(url, "delete", **params)
 
-    async def get_tags(self):
+    async def get_tags(self, session):
         """
 
             GET /api/tags.{_format}
@@ -558,8 +564,9 @@ class Wallabag(object):
         return await self.query(url, "get", **params)
 
     @classmethod
-    async def get_token(cls, session, host, **params):
+    async def get_token(cls, host, **params):
         """
+
         :param host: host of the service
         :param params: will contain :
 
@@ -571,10 +578,10 @@ class Wallabag(object):
 
         :return: access token
         """
-        params['grant_type'] = "client_credentials"
+        params['grant_type'] = "password"
         path = "/oauth/v2/token"
-        async with aiohttp.ClientSession(loop=session.loop) as session:
-            async with session.post(host + path, params=params) as resp:
-                print(await resp.text())
-                return await cls.handle_json_response(resp)['access_token']
-                # return await cls.handle_json_response(resp)
+        async with aiohttp.ClientSession() as sess:
+            async with sess.post(host + path, data=params) as resp:
+                data = await cls.handle_json_response(resp)
+                return data.get("access_token")
+
