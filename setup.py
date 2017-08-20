@@ -1,14 +1,15 @@
 from setuptools import setup, find_packages
 from wallabag_api import __version__ as version
 
+desc = 'Wallabag API to add every pages you want to your Wallabag account'
 install_requires = [
-    'requests-2.13.0',
+    'aiohttp==2.2.5',
 ]
 
 setup(
     name='wallabag_api',
     version=version,
-    description='Wallabag API to add every pages you want to your Wallabag account',
+    description=desc,
     author='FoxMaSk',
     author_email='foxmask@trigger-happy.eu',
     url='https://github.com/foxmask/wallabag_api',
@@ -21,7 +22,6 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Internet',
         'Topic :: Communications',
