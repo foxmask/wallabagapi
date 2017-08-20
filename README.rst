@@ -3,11 +3,6 @@
     :alt: Python version supported
 
 
-.. image:: http://img.shields.io/badge/python-3.5-orange.svg
-    :target: https://pypi.python.org/pypi/django-th/
-    :alt: Python version supported
-
-
 .. image:: http://img.shields.io/badge/license-BSD-blue.svg
     :target: https://pypi.python.org/pypi/django-th/
     :alt: License
@@ -22,7 +17,7 @@ Python API for Wallabag v2.2.3
 Requirements :
 ==============
 
-* requests  2.13.0
+* aiohttp
 
 
 Installation:
@@ -51,68 +46,71 @@ Creating a post :
 
 .. code:: python
 
+    #!/usr/bin/env python
+
+    import aiohttp
+    import asyncio
+
     from wallabag_api.wallabag import Wallabag
     # settings
-    params = {'username': 'foxmask',
-              'password': 'mypass',
-              'client_id': 'myid',
-              'client_secret': 'mysecret'}
     my_host = 'http://localhost:8080'
-    # get token
-    token = Wallabag.get_token(host=my_host, **params)
 
-    # create a post
-    wall = Wallabag(host=my_host,
-                    client_secret='mysecret',
-                    client_id='myid',
-                    token=token)
 
-    my_url = 'https://blog.trigger-happy.eu'
-    my_title = 'Trigger Happy blog'
-    my_tags = ['python', 'wallabag']
+    async def main(loop):
 
-    wall.post_entries(url=my_url, title=my_title, tags=my_tags)
+        params = {'username': 'foxmask',
+                  'password': 'mypass',
+                  'client_id': 'myid',
+                  'client_secret': 'mysecret',
+                  'extension': 'pdf'}
+
+        # get a new token
+        token = await Wallabag.get_token(host=my_host, **params)
+
+        # initializing
+        async with aiohttp.ClientSession(loop=loop) as session:
+            wall = Wallabag(host=my_host,
+                            client_secret=params.get('client_secret'),
+                            client_id=params.get('client_id'),
+                            token=token,
+                            extension=params['extension'],
+                            aio_sess=session)
+
+            url = 'https://foxmask.trigger-happy.eu'
+            title = 'foxmask\'s  blog'
+
+            await wall.post_entries(url, title, '', 0, 0)
+
+            url = 'https://trigger-happy.eu'
+            title = 'Project TrigerHappy'
+
+            await wall.post_entries(url, title, '', 0, 0)
+
+            # get all the articles
+            my_wallabag = await wall.get_entries()
+
+            all_article = my_wallabag['_embedded']['items']
+
+            for article in all_article:
+                print(article['id'], article['title'])
+
+            # get the version of wallabag
+            version = await wall.version
+            print(f"version {version}")
+
+            # export one article into PDF
+            my_wallabag = await wall.get_entry_export(entry=1)
+            with open("foobar.pdf", "wb") as f:
+                f.write(my_wallabag)
+
+    if __name__ == '__main__':
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main(loop))
 
 
 this will give you something like this :
 
 .. image:: https://github.com/foxmask/wallabag_api/blob/master/wallabag.png
-
-
-3) get all the entries
-
-.. code:: python
-
-    # get all the entries
-    wall = wall.get_entries()
-
-    all_article = wall['_embedded']['items']
-
-    for article in all_article:
-        print(article['title'])
-        print(article['content'])
-        print("******")
-
-4) version of wallabag
-
-.. code:: python
-
-    # get the version of your wallabag instance
-    print("version {}".format(wall.version))
-
-5) to get the article in PDF
-
-.. code:: python
-
-    # to get the article in PDF for example,
-    wall = Wallabag(host=my_host,
-                    client_secret='mysecret',
-                    client_id='myid',
-                    token=token,
-                    extension='pdf')
-    article = wall.get_entry(entry=1)
-    with open("my_file.pdf", "wb") as f:
-        f.write(article)
 
 
 Testing :
@@ -124,7 +122,7 @@ Then run the development version (with make run)
 
 Then create a client API like explain here http://doc.wallabag.org/en/v2/developer/api.html
 
-this will give you somthing like this
+this will give you something like this
 
 .. image:: https://github.com/foxmask/wallabag_api/blob/master/wallabag_api_key.png
 
