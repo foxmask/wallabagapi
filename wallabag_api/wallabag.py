@@ -97,18 +97,21 @@ class Wallabag(object):
         :param responses: the json response
         :return the json data without 'root' node
         """
-        if responses.status != 200:
-            raise HttpProcessingError(code=responses.status,
-                                      message=await responses.json())
         json_data = {}
-        try:
-            json_data = responses.json()
-        except ClientResponseError as e:
-            # sometimes json_data does not return any json() without
-            # any error. This is due to the grabbing URL which "rejects"
-            # the URL
-            logging.error("Wallabag: aiohttp error {code} {message}"
-                          .format(code=e.code, message=e.message))
+        if responses.status != 200:
+            err_msg = HttpProcessingError(code=responses.status,
+                                          message=await responses.json())
+            logging.error("Wallabag: aiohttp error {err_msg}".format(
+                err_msg=err_msg))
+        else:
+            try:
+                json_data = responses.json()
+            except ClientResponseError as e:
+                # sometimes json_data does not return any json() without
+                # any error. This is due to the grabbing URL which "rejects"
+                # the URL
+                logging.error("Wallabag: aiohttp error {code} {message}"
+                              .format(code=e.code, message=e.message))
         return await json_data
 
     @staticmethod
