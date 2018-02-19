@@ -12,8 +12,8 @@ setup(
     description=desc,
     author='FoxMaSk',
     author_email='foxmask@trigger-happy.eu',
-    url='https://github.com/foxmask/wallabag_api',
-    download_url="https://github.com/foxmask/wallabag_api/archive/"
+    url='https://github.com/push-things/wallabag_api',
+    download_url="https://github.com/push-things/wallabag_api/archive/"
                  "wallabag_api-" + version + ".zip",
     packages=find_packages(),
     classifiers=[
