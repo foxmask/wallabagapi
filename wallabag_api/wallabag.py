@@ -33,8 +33,8 @@ class Wallabag(object):
                  client_id='',
                  client_secret='',
                  extension='json',
-                 user_agent="WallabagPython/1.3 "
-                            "+https://github.com/foxmask/wallabag-api",
+                 user_agent="WallabagPython/1.2.2 "
+                            " +https://github.com/push-things/wallabag-api",
                  aio_sess=None):
         """
         init variable

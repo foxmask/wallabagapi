@@ -2,19 +2,21 @@ from setuptools import setup, find_packages
 from wallabag_api import __version__ as version
 
 desc = 'Wallabag API to add every pages you want to your Wallabag account'
+long_desc = 'Wallabag is a "read it later" service, and that Wallabag API allow you to save web pages ' \
+            'to your own account'
 install_requires = [
-    'aiohttp==2.2.5',
+    'aiohttp',
 ]
 
 setup(
     name='wallabag_api',
     version=version,
     description=desc,
+    long_description=desc,
     author='FoxMaSk',
     author_email='foxmask@trigger-happy.eu',
-    url='https://github.com/foxmask/wallabag_api',
-    download_url="https://github.com/foxmask/wallabag_api/archive/"
-                 "wallabag_api-" + version + ".zip",
+    url='https://github.com/push-things/wallabag_api',
+    download_url="https://github.com/push-things/wallabag_api/archive/wallabag_api-" + version + ".zip",
     packages=find_packages(),
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -109,5 +109,6 @@ class TestWallabag(unittest.TestCase):
         self.assertTrue(resp, True)
     """
 
+
 if __name__ == '__main__':
     unittest.main()
