@@ -12,7 +12,7 @@ setup(
     name='wallabag_api',
     version=version,
     description=desc,
-    long_description=desc,
+    long_description=long_desc,
     author='FoxMaSk',
     author_email='foxmask@trigger-happy.eu',
     url='https://github.com/push-things/wallabag_api',

@@ -332,7 +332,8 @@ class Wallabag(object):
 
         :return result
         """
-        params = {'url': url,
+        params = {'access_token': self.token,
+                  'url': url,
                   'urls': urls}
 
         path = '/api/entries/exists.{ext}'.format(ext=self.format)
