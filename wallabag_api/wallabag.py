@@ -150,8 +150,6 @@ class Wallabag(object):
         """
         # default values
         params = dict({'access_token': self.token,
-                       'archive': 0,
-                       'star': 0,
                        'delete': 0,
                        'sort': 'created',
                        'order': 'desc',
@@ -160,23 +158,14 @@ class Wallabag(object):
                        'tags': '',
                        'since': 0})
 
-        params['archive'] = self.__get_attr(what='archive',
-                                            type_attr=int,
-                                            value_attr=(0, 1),
-                                            **params)
-        params['star'] = self.__get_attr(what='star',
-                                         type_attr=int,
-                                         value_attr=(0, 1),
-                                         **params)
-        params['delete'] = self.__get_attr(what='delete',
-                                           type_attr=int,
-                                           value_attr=(0, 1),
-                                           **params)
-        params['order'] = self.__get_attr(what='order',
-                                          type_attr=str,
-                                          value_attr=('asc', 'desc'),
-                                          **params)
-
+        if 'archive' in kwargs and int(kwargs['archive']) in (0, 1):
+            params['archive'] = int(kwargs['archive'])
+        if 'star' in kwargs and int(kwargs['star']) in (0, 1):
+            params['star'] = int(kwargs['star'])
+        if 'delete' in kwargs and int(kwargs['delete']) in (0, 1):
+            params['delete'] = int(kwargs['delete'])
+        if 'order' in kwargs and kwargs['order'] in ('asc', 'desc'):
+            params['order'] = kwargs['order']
         if 'page' in kwargs and isinstance(kwargs['page'], int):
             params['page'] = kwargs['page']
         if 'perPage' in kwargs and isinstance(kwargs['perPage'], int):
@@ -190,7 +179,8 @@ class Wallabag(object):
 
         return await self.query(path, "get", **params)
 
-    async def post_entries(self, url, title='', tags='', starred=0, archive=0):
+    async def post_entries(self, url, title='', tags='', starred=0, archive=0, content='', language='', published_at='',
+                           authors='', public=1, original_url=''):
         """
         POST /api/entries.{_format}
 
@@ -201,12 +191,20 @@ class Wallabag(object):
         :param tags: tag1,tag2,tag3 a comma-separated list of tags.
         :param starred entry already starred
         :param archive entry already archived
+        :param content additionnal html content
+        :param language
+        :param published_at
+        :param authors
+        :param public
+        :param original_url
         :return result
         """
         params = {'access_token': self.token, 'url': url, 'title': title,
-                  'tags': tags, 'starred': starred, 'archive': archive}
-        if len(tags) > 0 and ',' in tags:
-            params['tags'] = tags.split(',')
+                  'tags': tags, 'starred': starred, 'archive': archive,
+                  'content': content, 'language': language, 'published_at': published_at,
+                  'authors': authors, 'public': public, 'original_url': original_url}
+        if len(tags) > 0 and isinstance(tags, list):
+            params['tags'] = ', '.join(tags)
         path = '/api/entries.{ext}'.format(ext=self.format)
         return await self.query(path, "post", **params)
 

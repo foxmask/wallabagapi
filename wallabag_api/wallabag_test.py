@@ -1,4 +1,5 @@
 # coding: utf-8
+import datetime
 import unittest
 from wallabag import Wallabag
 
@@ -33,17 +34,23 @@ class TestWallabag(unittest.TestCase):
 
     def create_entry(self):
         title = 'foobar title'
-        url = 'https://smcomm.trigger-happy.eu/'
+        url = 'https://somwhere.over.the.raibow.com/'
         tags = ['foo', 'bar']
         starred = 0
         archive = 0
-        data = self.w.post_entries(url, title, tags, starred, archive)
+        content = '<p>Additional content</p>'
+        language = 'FR'
+        published_at = datetime.datetime.now()
+        authors = 'John Doe'
+        public = 0
+        original_url = 'http://localhost'
+        data = self.w.post_entries(url, title, tags, starred, archive, content, language, published_at, authors,
+                                   public, original_url)
+
         return data
 
     def test_get_entries(self):
-        params = {'archive': 0,
-                  'star': 0,
-                  'delete': 0,
+        params = {'delete': 0,
                   'sort': 'created',
                   'order': 'desc',
                   'page': 1,
