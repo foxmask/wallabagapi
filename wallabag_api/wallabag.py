@@ -76,7 +76,7 @@ class Wallabag(object):
             elif method == 'patch':
                 resp = await self.aio_sess.patch(full_path, data=params)
             elif method == 'delete':
-                resp = await self.aio_sess.delete(full_path, headers=params)
+                resp = await self.aio_sess.delete(full_path, params=params, headers=params)
             elif method == 'put':
                 resp = await self.aio_sess.put(full_path, data=params)
 
