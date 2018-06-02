@@ -222,6 +222,20 @@ class Wallabag(object):
                                                   ext=self.format)
         return await self.query(url, "get", **params)
 
+    async def reaload_entry(self, entry):
+        """
+        PATCH /api/entries/{entry}/reload.{_format}
+
+        Reload a single entry
+
+        :param entry: \w+ an integer The Entry ID
+        :return data related to the ext
+        """
+        params = {'access_token': self.token}
+        url = '/api/entries/{entry}/reload.{ext}'.format(entry=entry,
+                                                         ext=self.format)
+        return await self.query(url, "patch", **params)
+
     async def patch_entries(self, entry, **kwargs):
         """
         PATCH /api/entries/{entry}.{_format}
