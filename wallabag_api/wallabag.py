@@ -360,12 +360,12 @@ class Wallabag(object):
         Add one or more tags to an entry
 
         :param entry: \w+ an integer The Entry ID
-        :param tags: string
+        :param tags: list of tags (urlencoded)
         :return result
         """
         params = {'access_token': self.token, 'tags': []}
-        if len(tags) > 0 and ',' in tags:
-            params['tags'] = tags.split(',')
+        if len(tags) > 0 and isinstance(tags, list):
+            params['tags'] = ', '.join(tags)
         path = '/api/entries/{entry}/tags.{ext}'.format(
             entry=entry, ext=self.format)
         return await self.query(path, "post", **params)
@@ -430,12 +430,13 @@ class Wallabag(object):
 
         Permanently remove some tags from every entry.
 
-        :param tags: string tags as strings (comma splitted)
+        :param tags: list of tags (urlencoded)
         :return data related to the ext
         """
         path = '/api/tag/label.{ext}'.format(ext=self.format)
-        params = {'access_token': self.token,
-                  'tags': tags}
+        params = {'access_token': self.token, 'tags': []}
+        if len(tags) > 0 and isinstance(tags, list):
+            params['tags'] = ', '.join(tags)
         return await self.query(path, "delete", **params)
 
     # ANNOTATIONS
