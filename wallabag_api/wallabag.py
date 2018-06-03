@@ -137,8 +137,7 @@ class Wallabag(object):
 
         :param kwargs: can contain one of the following filters
             archive:  '0' or '1', default '0' filter by archived status.
-            star: '0' or '1', default '0' filter by starred status.
-            delete: '0' or '1', default '0' filter by deleted status.
+            starred: '0' or '1', default '0' filter by starred status.
             sort: 'created' or 'updated', default 'created'
             order: 'asc' or 'desc', default 'desc'
             page: int default 1 what page you want
@@ -150,7 +149,6 @@ class Wallabag(object):
         """
         # default values
         params = dict({'access_token': self.token,
-                       'delete': 0,
                        'sort': 'created',
                        'order': 'desc',
                        'page': 1,
@@ -160,10 +158,8 @@ class Wallabag(object):
 
         if 'archive' in kwargs and int(kwargs['archive']) in (0, 1):
             params['archive'] = int(kwargs['archive'])
-        if 'star' in kwargs and int(kwargs['star']) in (0, 1):
-            params['star'] = int(kwargs['star'])
-        if 'delete' in kwargs and int(kwargs['delete']) in (0, 1):
-            params['delete'] = int(kwargs['delete'])
+        if 'starred' in kwargs and int(kwargs['starred']) in (0, 1):
+            params['starred'] = int(kwargs['starred'])
         if 'order' in kwargs and kwargs['order'] in ('asc', 'desc'):
             params['order'] = kwargs['order']
         if 'page' in kwargs and isinstance(kwargs['page'], int):
@@ -233,18 +229,14 @@ class Wallabag(object):
             title: string
             tags: a list of tags tag1,tag2,tag3
             archive:  '0' or '1', default '0' archived the entry.
-            star: '0' or '1', default '0' starred the entry
-            delete: '0' or '1', default '0' flag as deleted.
+            starred: '0' or '1', default '0' starred the entry
             In case that you don't want to *really* remove it..
         :return data related to the ext
         """
         # default values
         params = {'access_token': self.token,
                   'title': '',
-                  'archive': 0,
-                  'tags': [],
-                  'star': 0,
-                  'delete': 0}
+                  'tags': []}
 
         if 'title' in kwargs:
             params['title'] = kwargs['title']
@@ -255,14 +247,10 @@ class Wallabag(object):
                                             type_attr=int,
                                             value_attr=(0, 1),
                                             **kwargs)
-        params['star'] = self.__get_attr(what='star',
-                                         type_attr=int,
-                                         value_attr=(0, 1),
-                                         **kwargs)
-        params['delete'] = self.__get_attr(what='delete',
-                                           type_attr=int,
-                                           value_attr=(0, 1),
-                                           **kwargs)
+        params['starred'] = self.__get_attr(what='starred',
+                                            type_attr=int,
+                                            value_attr=(0, 1),
+                                            **kwargs)
         params['order'] = self.__get_attr(what='order',
                                           type_attr=str,
                                           value_attr=('asc', 'desc'),
