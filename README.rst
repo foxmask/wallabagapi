@@ -1,10 +1,10 @@
-.. image:: http://img.shields.io/badge/python-3.6-orange.svg
-    :target: https://pypi.python.org/pypi/django-th/
+.. image:: http://img.shields.io/badge/python-3.8-blue.svg
+    :target: https://pypi.python.org/pypi/wallabag_api/
     :alt: Python version supported
 
 
 .. image:: http://img.shields.io/badge/license-BSD-blue.svg
-    :target: https://pypi.python.org/pypi/django-th/
+    :target: https://pypi.python.org/pypi/wallabag_api/
     :alt: License
 
 
@@ -12,12 +12,12 @@
 Wallabag API
 ============
 
-Python API for Wallabag v2.2.3
+Python API for Wallabag v2.4.2
 
 Requirements :
 ==============
 
-* aiohttp
+* httpx
 
 
 Installation:
@@ -27,7 +27,7 @@ to get the project, from your virtualenv, do :
 
 .. code:: python
 
-    git clone https://github.com/push-things/wallabag_api/
+    git clone https://gitlab.com/foxmask/wallabag_api/
 
 
 or
@@ -48,8 +48,7 @@ Creating a post :
 
     #!/usr/bin/env python
 
-    import aiohttp
-    import asyncio
+    import httpx
 
     from wallabag_api.wallabag import Wallabag
     # settings
@@ -67,19 +66,20 @@ Creating a post :
         # get a new token
         token = await Wallabag.get_token(host=my_host, **params)
 
+        wall = Wallabag(host=my_host,
+                        client_secret=params.get('client_secret'),
+                        client_id=params.get('client_id'),
+                        token=token,
+                        extension=params['extension'],
+                        aio_sess=session)
+
         # initializing
-        async with aiohttp.ClientSession(loop=loop) as session:
-            wall = Wallabag(host=my_host,
-                            client_secret=params.get('client_secret'),
-                            client_id=params.get('client_id'),
-                            token=token,
-                            extension=params['extension'],
-                            aio_sess=session)
+        async with httpx.AsyncClient() as client:
 
             url = 'https://foxmask.trigger-happy.eu'
             title = 'foxmask\'s  blog'
 
-            await wall.post_entries(url, title, '', 0, 0)
+            await client.post_entries(url, title, '', 0, 0)
 
             url = 'https://trigger-happy.eu'
             title = 'Project TrigerHappy'
@@ -110,7 +110,7 @@ Creating a post :
 
 this will give you something like this :
 
-.. image:: https://github.com/push-things/wallabag_api/blob/master/wallabag.png
+.. image:: https://gitlab.com/foxmask/wallabag_api/-/raw/master/wallabag.png
 
 
 Testing :
@@ -124,7 +124,7 @@ Then create a client API like explain here http://doc.wallabag.org/en/v2/develop
 
 this will give you something like this
 
-.. image:: https://github.com/push-things/wallabag_api/blob/master/wallabag_api_key.png
+.. image:: https://gitlab.com/foxmask/wallabag_api/-/raw/master/wallabag_api_key.png
 
 Then replace the client_id / client_secret / login / pass to wallabag_test.py and run
 

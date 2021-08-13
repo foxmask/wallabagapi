@@ -1,40 +1,45 @@
 # coding: utf-8
 import datetime
 import unittest
+from unittest import IsolatedAsyncioTestCase
 from wallabag import Wallabag
 
 
-class TestWallabag(unittest.TestCase):
+class TestWallabag(IsolatedAsyncioTestCase):
 
-    host = 'http://localhost:8000'
+    host = 'http://wallabag:81'
     client_id = ''
     client_secret = ''
     token = ''
 
-    def setUp(self):
-        access_token = self.test_get_token()
-        self.format = 'json'
-        self.w = Wallabag(host=self.host,
-                          token=access_token,
-                          client_id=self.client_id,
-                          client_secret=self.client_secret)
+    async def asyncSetUp(self):
 
-    def test_get_token(self):
         params = {"grant_type": "password",
-                  "client_id":
-                  '1_4wqe1riwt0qoks844kwc4go08koogkgk88go4cckkwg0408kcg',
-                  "client_secret": '4mzw3qwi1xyc0cks4k80s4c8kco40wwkkkw0g40kwk4o4c44co',
+                  "client_id": '1_3847efhvxack8gwog8scg8oowww0csogg4wwoogg0cg444g8k4',
+                  "client_secret": 'i1j19n9e7mog0ook48gwo0kck88oskggwgswwg48gsw4sc8gk',
                   "username": 'wallabag',
                   "password": 'wallabag'}
-        print(self.host)
-        data = Wallabag.get_token(host=self.host, **params)
-        print(data)
+
+        self.token = await Wallabag.get_token(host=self.host, **params)
+        self.format = 'json'
+        self.w = Wallabag(host=self.host,
+                          token=self.token)
+
+    async def test_get_token(self):
+        params = {"grant_type": "password",
+                  "client_id": '1_3847efhvxack8gwog8scg8oowww0csogg4wwoogg0cg444g8k4',
+                  "client_secret": 'i1j19n9e7mog0ook48gwo0kck88oskggwgswwg48gsw4sc8gk',
+                  "username": 'wallabag',
+                  "password": 'wallabag'}
+        data = await Wallabag.get_token(host=self.host, **params)
         self.assertTrue(isinstance(data, str), True)
         return data
 
-    def create_entry(self):
-        title = 'foobar title'
-        url = 'https://somwhere.over.the.raibow.com/'
+    async def create_entry(self):
+        self.format = 'json'
+
+        title = 'the FooBar Title'
+        url = 'https://somwhereelse.over.the.raibow.com/'
         tags = ['foo', 'bar']
         starred = 0
         archive = 0
@@ -44,42 +49,43 @@ class TestWallabag(unittest.TestCase):
         authors = 'John Doe'
         public = 0
         original_url = 'http://localhost'
-        data = self.w.post_entries(url, title, tags, starred, archive, content, language, published_at, authors,
-                                   public, original_url)
+        data = await self.w.post_entries(url, title, tags, starred, archive,
+                                         content, language, published_at, authors,
+                                         public, original_url)
 
         return data
 
-    def test_get_entries(self):
+    async def test_get_entries(self):
         params = {'delete': 0,
                   'sort': 'created',
                   'order': 'desc',
                   'page': 1,
                   'perPage': 30,
                   'tags': []}
-        data = self.w.get_entries(**params)
+        data = await self.w.get_entries(**params)
         self.assertIsInstance(data, dict)
 
-    def test_get_entry(self):
+    async def test_get_entry(self):
         entry = 1
         self.assertTrue(isinstance(entry, int), True)
-        data = self.w.get_entry(entry)
+        data = await self.w.get_entry(entry)
         self.assertTrue(data, str)
 
-    def test_get_entry_tags(self):
+    async def test_get_entry_tags(self):
         entry = 1
         self.assertTrue(isinstance(entry, int), True)
-        data = self.w.get_entry_tags(entry)
+        data = await self.w.get_entry_tags(entry)
         self.assertIsInstance(data, list)
 
-    def test_get_tags(self):
-        data = self.w.get_tags()
+    async def test_get_tags(self):
+        data = await self.w.get_tags()
         self.assertIsInstance(data, list)
 
-    def test_post_entries(self):
-        data = self.create_entry()
+    async def test_post_entries(self):
+        data = await self.create_entry()
         self.assertTrue(data, True)
 
-    def test_patch_entries(self):
+    async def test_patch_entries(self):
         entry = 1
         params = {'title': 'I change the title',
                   'archive': 0,
@@ -89,21 +95,21 @@ class TestWallabag(unittest.TestCase):
                   'delete': 0}
         self.assertTrue(isinstance(entry, int), True)
         self.assertTrue(isinstance(params, dict), True)
-        data = self.w.patch_entries(entry, **params)
+        data = await self.w.patch_entries(entry, **params)
         self.assertTrue(data, True)
 
-    def test_delete_entries(self):
-        entry = self.create_entry()
+    async def test_delete_entries(self):
+        entry = await self.create_entry()
         self.assertTrue(isinstance(entry['id'], int), True)
-        data = self.w.delete_entries(entry['id'])
+        data = await self.w.delete_entries(entry['id'])
         self.assertTrue(data, True)
 
-    def test_post_entry_tags(self):
+    async def test_post_entry_tags(self):
         entry = 1
         self.assertTrue(isinstance(entry, int), True)
         tags = ['foo', 'bar']
         self.assertTrue(isinstance(tags, list), True)
-        data = self.w.post_entry_tags(entry, tags)
+        data = await self.w.post_entry_tags(entry, tags)
         self.assertTrue(data, True)
 
     """
