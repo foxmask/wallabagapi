@@ -17,14 +17,14 @@ to get the project, from your virtualenv, do :
 
 .. code:: python
 
-    git clone https://gitlab.com/foxmask/wallabag_api/
+    git clone https://gitlab.com/foxmask/wallabagapi/
 
 
 or
 
 .. code:: python
 
-    pip install wallabag_api
+    pip install wallabagapi
 
 
 
@@ -40,7 +40,7 @@ Creating a post :
 
     import httpx
 
-    from wallabag_api.wallabag import Wallabag
+    from wallabagapi.wallabag import Wallabag
     # settings
     my_host = 'http://localhost:8080'
 
@@ -100,7 +100,7 @@ Creating a post :
 
 this will give you something like this :
 
-.. image:: https://gitlab.com/foxmask/wallabag_api/-/raw/master/wallabag.png
+.. image:: https://gitlab.com/foxmask/wallabagapi/-/raw/master/wallabag.png
 
 
 Testing :
@@ -114,7 +114,7 @@ Then create a client API like explain here http://doc.wallabag.org/en/v2/develop
 
 this will give you something like this
 
-.. image:: https://gitlab.com/foxmask/wallabag_api/-/raw/master/wallabag_api_key.png
+.. image:: https://gitlab.com/foxmask/wallabagapi/-/raw/master/wallabagapi_key.png
 
 Then replace the client_id / client_secret / login / pass to wallabag_test.py and run
 
