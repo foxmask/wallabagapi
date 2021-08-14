@@ -5,11 +5,13 @@ from setuptools import setup, find_packages
 
 import wallabagapi
 
+version = wallabagapi.__version__
+
 setup(
 
     name='wallabagapi',
 
-    version=wallabagapi.__version__,
+    version=version,
 
     packages=find_packages(),
 
@@ -19,16 +21,17 @@ setup(
     description="Wallabag API to add every pages you want to your Wallabag account",
     long_description=open('README.rst').read(),
 
-    url='https://gitlab.com/foxmask/wallabagapi',
+    url='https://gitlab.com/foxmask/wallabag_api',
+    download_url='https://gitlab.com/foxmask/wallabag_api/-/archive/' + version + 'wallabagapi-' + version + '.tar.gz',
 
     classifiers=[
-        "Development Status :: 5 - Production/Stable"
-        "Intended Audience :: Developers"
-        "License :: Public Domain"
-        "Operating System :: OS Independent"
-        "Programming Language :: Python"
-        "Programming Language :: Python :: 3.8"
-        "Topic :: Internet"
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "License :: Public Domain",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Internet",
         "Topic :: Communications"
     ],
 
