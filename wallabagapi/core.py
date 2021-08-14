@@ -10,10 +10,10 @@ __author__ = 'foxmask'
 
 logging.basicConfig(format='%(message)s', level=logging.INFO)
 
-__all__ = ['Wallabag']
+__all__ = ['WallabagAPI']
 
 
-class Wallabag(object):
+class WallabagAPI(object):
     """
         Python Class 'Wallabag' to deal with Wallabag REST API
         This class is able to handle any data from your Wallabag account

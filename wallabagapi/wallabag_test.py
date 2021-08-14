@@ -6,7 +6,7 @@
 import datetime
 import unittest
 from unittest import IsolatedAsyncioTestCase
-from wallabag import Wallabag
+from core import Wallabag
 
 
 class TestWallabag(IsolatedAsyncioTestCase):
