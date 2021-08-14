@@ -1,13 +1,3 @@
-.. image:: http://img.shields.io/badge/python-3.8-blue.svg
-    :target: https://pypi.python.org/pypi/wallabag_api/
-    :alt: Python version supported
-
-
-.. image:: http://img.shields.io/badge/license-BSD-blue.svg
-    :target: https://pypi.python.org/pypi/wallabag_api/
-    :alt: License
-
-
 ============
 Wallabag API
 ============
