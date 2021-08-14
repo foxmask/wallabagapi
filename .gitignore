@@ -6,3 +6,5 @@
 *.json
 .tox
 build
+dist
+*.egg-info
