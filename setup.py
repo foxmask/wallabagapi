@@ -17,7 +17,7 @@ setup(
     author_email="foxmask+git@pm.me",
 
     description="Wallabag API to add every pages you want to your Wallabag account",
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
 
     url='https://gitlab.com/foxmask/wallabagapi',
 
