@@ -6,7 +6,7 @@
 import datetime
 import unittest
 from unittest import IsolatedAsyncioTestCase
-from core import Wallabag
+from wallabagapi.core import WallabagAPI
 
 
 class TestWallabag(IsolatedAsyncioTestCase):
@@ -24,10 +24,9 @@ class TestWallabag(IsolatedAsyncioTestCase):
                   "username": 'wallabag',
                   "password": 'wallabag'}
 
-        self.token = await Wallabag.get_token(host=self.host, **params)
+        self.token = await WallabagAPI.get_token(host=self.host, **params)
         self.format = 'json'
-        self.w = Wallabag(host=self.host,
-                          token=self.token)
+        self.w = WallabagAPI(host=self.host, token=self.token)
 
     async def test_get_token(self):
         params = {"grant_type": "password",
@@ -35,7 +34,7 @@ class TestWallabag(IsolatedAsyncioTestCase):
                   "client_secret": 'i1j19n9e7mog0ook48gwo0kck88oskggwgswwg48gsw4sc8gk',
                   "username": 'wallabag',
                   "password": 'wallabag'}
-        data = await Wallabag.get_token(host=self.host, **params)
+        data = await WallabagAPI.get_token(host=self.host, **params)
         self.assertTrue(isinstance(data, str), True)
         return data
 
@@ -70,15 +69,17 @@ class TestWallabag(IsolatedAsyncioTestCase):
         self.assertIsInstance(data, dict)
 
     async def test_get_entry(self):
-        entry = 1
-        self.assertTrue(isinstance(entry, int), True)
-        data = await self.w.get_entry(entry)
+        entry = await self.create_entry()
+        new_id = entry['id']
+        self.assertTrue(isinstance(new_id, int), True)
+        data = await self.w.get_entry(new_id)
         self.assertTrue(data, str)
 
     async def test_get_entry_tags(self):
-        entry = 1
-        self.assertTrue(isinstance(entry, int), True)
-        data = await self.w.get_entry_tags(entry)
+        entry = await self.create_entry()
+        new_id = entry['id']
+        self.assertTrue(isinstance(new_id, int), True)
+        data = await self.w.get_entry_tags(new_id)
         self.assertIsInstance(data, list)
 
     async def test_get_tags(self):
@@ -90,16 +91,17 @@ class TestWallabag(IsolatedAsyncioTestCase):
         self.assertTrue(data, True)
 
     async def test_patch_entries(self):
-        entry = 1
+        entry = await self.create_entry()
+        new_id = entry['id']
         params = {'title': 'I change the title',
                   'archive': 0,
                   'tags': ["bimbo", "pipo"],
                   'order': 'asc',
                   'star': 0,
                   'delete': 0}
-        self.assertTrue(isinstance(entry, int), True)
+        self.assertTrue(isinstance(new_id, int), True)
         self.assertTrue(isinstance(params, dict), True)
-        data = await self.w.patch_entries(entry, **params)
+        data = await self.w.patch_entries(new_id, **params)
         self.assertTrue(data, True)
 
     async def test_delete_entries(self):
@@ -109,11 +111,12 @@ class TestWallabag(IsolatedAsyncioTestCase):
         self.assertTrue(data, True)
 
     async def test_post_entry_tags(self):
-        entry = 1
-        self.assertTrue(isinstance(entry, int), True)
+        entry = await self.create_entry()
+        new_id = entry['id']
+        self.assertTrue(isinstance(new_id, int), True)
         tags = ['foo', 'bar']
         self.assertTrue(isinstance(tags, list), True)
-        data = await self.w.post_entry_tags(entry, tags)
+        data = await self.w.post_entry_tags(new_id, tags)
         self.assertTrue(data, True)
 
     """

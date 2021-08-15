@@ -55,6 +55,25 @@ class WallabagAPI(object):
             raise ValueError("format invalid {0} should be one of {1}".format(
                 self.format, self.EXTENTIONS))
 
+    async def call_method(self, client: str, method: str, full_path: str, **data):
+        """
+        dynamic call of the expected httpx methods
+        :param client: instance of httpx.AsyncClient
+        :param method: method name
+        :param full_path: URL to wallabag
+        :param data: dict
+        """
+        if hasattr(client, method) and callable(func := getattr(client, method)):
+            if method == 'get':
+                data['access_token'] = self.token
+                resp = await func(full_path, params=data)
+            elif method == 'delete':
+                resp = await func(full_path, params={'access_token': self.token})
+            else:  # put post patch, all size with same calls
+                resp = await func(full_path, params={'access_token': self.token}, data=data)
+
+            return resp
+
     async def query(self, path, method='get', **data):
         """
         Do a query to the System API
@@ -66,49 +85,29 @@ class WallabagAPI(object):
         :return json data
         """
 
-        if method in ('get', 'post', 'patch', 'delete', 'put'):
-            try:
-                async with httpx.AsyncClient() as client:
-
-                    full_path = self.host + path
-
-                    if method == 'get':
-                        data['access_token'] = self.token
-                        resp = await client.get(full_path, params=data)
-                    elif method == 'post':
-                        resp = await client.post(full_path,
-                                                 params={'access_token': self.token},
-                                                 data=data)
-                    elif method == 'patch':
-                        resp = await client.patch(full_path,
-                                                  params={'access_token': self.token},
-                                                  data=data)
-                    elif method == 'delete':
-                        resp = await client.delete(full_path,
-                                                   params={'access_token': self.token},
-                                                   data=data)
-                    elif method == 'put':
-                        resp = await client.put(full_path,
-                                                params={'access_token': self.token},
-                                                data=data)
-
-                # return the content if its a binary one
-                if resp.headers['Content-Type'].startswith('application/pdf') or \
-                        resp.headers['Content-Type'].startswith('application/epub'):
-                    return await resp.read()
-
-                resp.raise_for_status()
-
-                return resp.json()
-
-            except httpx.RequestError as exc:
-                logging.error(f"An error occurred while requesting {exc.request.url!r}.")
-
-            except httpx.HTTPStatusError as exc:
-                logging.error(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
-
-        else:
+        if method not in ('get', 'post', 'patch', 'delete', 'put'):
             raise ValueError('method expected: get, post, patch, delete, put')
+
+        full_path = self.host + path
+
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await self.call_method(client, method, full_path, **data)
+
+            # return the content if its a binary one
+            if resp.headers['Content-Type'].startswith('application/pdf') or \
+                    resp.headers['Content-Type'].startswith('application/epub'):
+                return await resp.read()
+
+            resp.raise_for_status()
+
+            return resp.json()
+
+        except httpx.RequestError as exc:
+            logging.error(f"An error occurred while requesting {exc.request.url!r}.")
+
+        except httpx.HTTPStatusError as exc:
+            logging.error(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
 
     @staticmethod
     def __get_attr(what, type_attr, value_attr, **kwargs):
@@ -182,7 +181,7 @@ class WallabagAPI(object):
         :param tags: tag1,tag2,tag3 a comma-separated list of tags.
         :param starred entry already starred
         :param archive entry already archived
-        :param content additionnal html content
+        :param content additional html content
         :param language
         :param published_at
         :param authors
@@ -190,7 +189,8 @@ class WallabagAPI(object):
         :param original_url
         :return result
         """
-        params = {'url': url}
+        params = {'url': url, 'public': public}
+
         if title:
             params['title'] = title
         if starred:
@@ -205,8 +205,6 @@ class WallabagAPI(object):
             params['published_at'] = published_at
         if authors:
             params['authors'] = authors
-        if public:
-            params['public'] = public
         if original_url:
             params['original_url'] = original_url
 
@@ -221,7 +219,7 @@ class WallabagAPI(object):
 
         Retrieve a single entry
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :return data related to the ext
         """
         url = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
@@ -233,7 +231,7 @@ class WallabagAPI(object):
 
         Reload a single entry
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :return data related to the ext
         """
 
@@ -287,7 +285,7 @@ class WallabagAPI(object):
 
         Retrieve a single entry as a predefined format.
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :return data related to the ext
         """
 
@@ -302,7 +300,7 @@ class WallabagAPI(object):
         if we weren't able to update the content (because it hasn't changed
         or we got an error).
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :return data related to the ext
         """
         url = '/api/entries/{entry}/reload.{ext}'.format(entry=entry, ext=self.format)
@@ -314,7 +312,7 @@ class WallabagAPI(object):
 
         Delete permanently an entry
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :return result
         """
         path = '/api/entries/{entry}.{ext}'.format(entry=entry, ext=self.format)
@@ -345,7 +343,7 @@ class WallabagAPI(object):
 
         Retrieve all tags for an entry
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :return data related to the ext
         """
         url = '/api/entries/{entry}/tags.{ext}'.format(entry=entry, ext=self.format)
@@ -357,7 +355,7 @@ class WallabagAPI(object):
 
         Add one or more tags to an entry
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :param tags: list of tags (urlencoded)
         :return result
         """
@@ -373,7 +371,7 @@ class WallabagAPI(object):
 
         Permanently remove one tag for an entry
 
-        :param entry: \w+ an integer The Entry ID
+        :param entry \\w+ integer The entry ID
         :param tag: string The Tag
         :return data related to the ext
         """
@@ -438,7 +436,7 @@ class WallabagAPI(object):
 
         Removes an annotation.
 
-        :param annotation 	\w+ 	string 	The annotation ID
+        :param annotation \\w+ string The annotation ID
 
         Will returns annotation for this entry
         :return data related to the ext
@@ -452,7 +450,7 @@ class WallabagAPI(object):
 
         Updates an annotation.
 
-        :param annotation 	\w+ 	string 	The annotation ID
+        :param annotation \\w+ string The annotation ID
 
         Will returns annotation for this entry
         :return data related to the ext
@@ -466,7 +464,7 @@ class WallabagAPI(object):
 
         Retrieve annotations for an entry
 
-        :param entry 	\w+ 	integer 	The entry ID
+        :param entry \\w+ integer The entry ID
 
         Will returns annotation for this entry
         :return data related to the ext
@@ -480,7 +478,7 @@ class WallabagAPI(object):
 
         Creates a new annotation.
 
-        :param entry 	\w+ 	integer 	The entry ID
+        :param entry \\w+ integer The entry ID
 
         :return
         """
