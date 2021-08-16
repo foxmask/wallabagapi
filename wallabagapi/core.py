@@ -110,12 +110,12 @@ class WallabagAPI(object):
             logging.error(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
 
     @staticmethod
-    def __get_attr(what, type_attr, value_attr, **kwargs):
+    def __get_value_from_kwars(what, type_attr, value_attr, **kwargs):
         """
         get the value of a parm
         :param what: string parm
         :param type_attr: type of parm
-        :param value_attr:
+        :param value_attr: list of available choices
         :param kwargs:
         :return: value of the parm
         """
@@ -123,6 +123,8 @@ class WallabagAPI(object):
             value = int(kwargs[what]) if type_attr == 'int' else kwargs[what]
             if value in value_attr:
                 return value
+            return value
+        return None
 
     # ENTRIES
     async def get_entries(self, **kwargs):
@@ -151,65 +153,89 @@ class WallabagAPI(object):
                        'tags': '',
                        'since': 0})
 
-        if 'archive' in kwargs and int(kwargs['archive']) in (0, 1):
-            params['archive'] = int(kwargs['archive'])
-        if 'starred' in kwargs and int(kwargs['starred']) in (0, 1):
-            params['starred'] = int(kwargs['starred'])
-        if 'order' in kwargs and kwargs['order'] in ('asc', 'desc'):
-            params['order'] = kwargs['order']
-        if 'page' in kwargs and isinstance(kwargs['page'], int):
-            params['page'] = kwargs['page']
-        if 'perPage' in kwargs and isinstance(kwargs['perPage'], int):
-            params['perPage'] = kwargs['perPage']
+        params['archive'] = self.__get_value_from_kwars(what='archive',
+                                                        type_attr=int,
+                                                        value_attr=(0, 1),
+                                                        **kwargs)
+        params['starred'] = self.__get_value_from_kwars(what='starred',
+                                                        type_attr=int,
+                                                        value_attr=(0, 1),
+                                                        **kwargs)
+        params['order'] = self.__get_value_from_kwars(what='order',
+                                                      type_attr=str,
+                                                      value_attr=('asc', 'desc'),
+                                                      **kwargs)
+        if 'page' in kwargs:
+            params['page'] = int(kwargs['page'])
+
+        if 'perPage' in kwargs:
+            params['perPage'] = int(kwargs['perPage'])
+
+        if 'since' in kwargs:
+            params['since'] = int(kwargs['since'])
+
         if 'tags' in kwargs and isinstance(kwargs['tags'], list):
             params['tags'] = ', '.join(kwargs['tags'])
-        if 'since' in kwargs and isinstance(kwargs['since'], int):
-            params['since'] = kwargs['since']
 
         path = '/api/entries.{ext}'.format(ext=self.format)
         return await self.query(path, "get", **params)
 
-    async def post_entries(self, url, title='', tags='', starred=0, archive=0, content='', language='', published_at='',
-                           authors='', public=1, original_url=''):
+    async def post_entries(self, url, **kwargs):
         """
         POST /api/entries.{_format}
 
         Create an entry
 
         :param url: the url of the note to store
-        :param title: Optional, we'll get the title from the page.
-        :param tags: tag1,tag2,tag3 a comma-separated list of tags.
-        :param starred entry already starred
-        :param archive entry already archived
-        :param content additional html content
-        :param language
-        :param published_at
-        :param authors
-        :param public
-        :param original_url
+        :param kwargs: can contain one of the following properties
+            title: Optional, we'll get the title from the page.
+            tags: tag1,tag2,tag3 a comma-separated list of tags.
+            archive:  '0' or '1', default '0' filter by archived status.
+            starred: '0' or '1', default '0' filter by starred status.
+            content additional html content
+            language
+            published_at
+            authors
+            public: '0' or '1', default '1' public status.
+            original_url
         :return result
         """
-        params = {'url': url, 'public': public}
+        params = dict({'url': url})
 
-        if title:
-            params['title'] = title
-        if starred:
-            params['starred'] = starred
-        if archive:
-            params['archive'] = archive
-        if content:
-            params['content'] = content
-        if language:
-            params['language'] = language
-        if published_at:
-            params['published_at'] = published_at
-        if authors:
-            params['authors'] = authors
-        if original_url:
-            params['original_url'] = original_url
+        if 'title' in kwargs and isinstance(kwargs['title'], str):
+            params['title'] = kwargs['title']
 
-        if len(tags) > 0 and isinstance(tags, list):
-            params['tags'] = ', '.join(tags)
+        if 'content' in kwargs and isinstance(kwargs['content'], str):
+            params['content'] = kwargs['content']
+
+        if 'language' in kwargs and isinstance(kwargs['language'], str):
+            params['language'] = kwargs['language']
+
+        if 'published_at' in kwargs and isinstance(kwargs['published_at'], str):
+            params['published_at'] = kwargs['published_at']
+
+        if 'authors' in kwargs and isinstance(kwargs['authors'], str):
+            params['authors'] = kwargs['authors']
+
+        if 'original_url' in kwargs and isinstance(kwargs['original_url'], str):
+            params['original_url'] = kwargs['original_url']
+
+        params['starred'] = self.__get_value_from_kwars(what='starred',
+                                                        type_attr=int,
+                                                        value_attr=(0, 1),
+                                                        **kwargs)
+        params['archive'] = self.__get_value_from_kwars(what='archive',
+                                                        type_attr=int,
+                                                        value_attr=(0, 1),
+                                                        **kwargs)
+        params['public'] = self.__get_value_from_kwars(what='public',
+                                                       type_attr=int,
+                                                       value_attr=(0, 1),
+                                                       **kwargs)
+
+        if 'tags' in kwargs and isinstance(kwargs['tags'], list):
+            params['tags'] = ', '.join(kwargs['tags'])
+
         path = '/api/entries.{ext}'.format(ext=self.format)
         return await self.query(path, "post", **params)
 
@@ -262,18 +288,18 @@ class WallabagAPI(object):
         if 'tags' in kwargs and isinstance(kwargs['tags'], list):
             params['tags'] = ', '.join(kwargs['tags'])
 
-        params['archive'] = self.__get_attr(what='archive',
-                                            type_attr=int,
-                                            value_attr=(0, 1),
-                                            **kwargs)
-        params['starred'] = self.__get_attr(what='starred',
-                                            type_attr=int,
-                                            value_attr=(0, 1),
-                                            **kwargs)
-        params['order'] = self.__get_attr(what='order',
-                                          type_attr=str,
-                                          value_attr=('asc', 'desc'),
-                                          **kwargs)
+        params['archive'] = self.__get_value_from_kwars(what='archive',
+                                                        type_attr=int,
+                                                        value_attr=(0, 1),
+                                                        **kwargs)
+        params['starred'] = self.__get_value_from_kwars(what='starred',
+                                                        type_attr=int,
+                                                        value_attr=(0, 1),
+                                                        **kwargs)
+        params['order'] = self.__get_value_from_kwars(what='order',
+                                                      type_attr=str,
+                                                      value_attr=('asc', 'desc'),
+                                                      **kwargs)
 
         path = '/api/entries/{entry}.{ext}'.format(
             entry=entry, ext=self.format)

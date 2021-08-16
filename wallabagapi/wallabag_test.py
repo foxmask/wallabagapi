@@ -41,20 +41,19 @@ class TestWallabag(IsolatedAsyncioTestCase):
     async def create_entry(self):
         self.format = 'json'
 
-        title = 'the FooBar Title'
         url = 'https://somwhereelse.over.the.raibow.com/'
-        tags = ['foo', 'bar']
-        starred = 0
-        archive = 0
-        content = '<p>Additional content</p>'
-        language = 'FR'
-        published_at = datetime.datetime.now()
-        authors = 'John Doe'
-        public = 0
-        original_url = 'http://localhost'
-        data = await self.w.post_entries(url, title, tags, starred, archive,
-                                         content, language, published_at, authors,
-                                         public, original_url)
+        kwargs = dict()
+        kwargs['title'] = 'the FooBar Title'
+        kwargs['tags'] = ['foo', 'bar']
+        kwargs['starred'] = 0
+        kwargs['archive'] = 0
+        kwargs['content'] = '<p>Additional content</p>'
+        kwargs['language'] = 'FR'
+        kwargs['published_at'] = datetime.datetime.now()
+        kwargs['authors'] = 'John Doe'
+        kwargs['public'] = 0
+        kwargs['original_url'] = 'http://localhost'
+        data = await self.w.post_entries(url, **kwargs)
 
         return data
 
