@@ -186,8 +186,8 @@ class WallabagAPI(object):
 
         Create an entry
 
-        :param url: the url of the note to store
-        :param kwargs: can contain one of the following properties
+        param url: the url of the note to store
+        param kwargs: can contain one of the following properties
             title: Optional, we'll get the title from the page.
             tags: tag1,tag2,tag3 a comma-separated list of tags.
             archive:  '0' or '1', default '0' filter by archived status.
