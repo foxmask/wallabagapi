@@ -17,7 +17,7 @@ to get the project, from your virtualenv, do :
 
 .. code:: python
 
-    git clone https://git/afpy.org/foxmask/wallabagapi/
+    git clone https://github.com/foxmask/wallabagapi.git
 
 
 or
